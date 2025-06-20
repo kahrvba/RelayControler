@@ -68,30 +68,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleDeleteProject = () => {
-    Alert.alert(
-      "Delete Project",
-      "Are you sure you want to delete this project? This action cannot be undone and will delete all relays.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive",
-          onPress: async () => {
-            if (!project) return;
-            try {
-              await supabase.from("relays").delete().eq("project_id", project.id);
-              await supabase.from("projects").delete().eq("id", project.id);
-              await refreshProject();
-            } catch (error) {
-              console.error('Error deleting project:', error);
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const handleRenameProject = () => {
     if (Platform.OS === 'ios') {
       Alert.prompt(
@@ -193,14 +169,6 @@ export default function SettingsScreen() {
           icon: "pencil-outline",
           type: "button",
           onPress: handleRenameProject
-        },
-        {
-          id: "delete-project",
-          title: "Delete Project",
-          subtitle: "Permanently delete project and all relays",
-          icon: "delete-outline",
-          type: "button",
-          onPress: handleDeleteProject
         }
       ]
     },
