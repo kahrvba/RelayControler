@@ -1,6 +1,6 @@
 import { ResizeMode, Video } from 'expo-av';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -11,8 +11,14 @@ interface VideoSplashScreenProps {
 
 export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoComplete }) => {
   const videoRef = useRef<Video>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoCompleted, setVideoCompleted] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   const handleVideoComplete = React.useCallback(async () => {
+    if (videoCompleted) return; // Prevent multiple calls
+    setVideoCompleted(true);
+    
     console.log('Video splash screen complete - transitioning to main app');
     try {
       // Hide the splash screen and notify parent component
@@ -22,7 +28,7 @@ export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoCom
       console.error('Error hiding splash screen:', error);
       onVideoComplete();
     }
-  }, [onVideoComplete]);
+  }, [onVideoComplete, videoCompleted]);
 
   useEffect(() => {
     // Keep the splash screen visible while we're showing the video
@@ -32,13 +38,18 @@ export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoCom
     const fallbackTimer = setTimeout(() => {
       console.log('Fallback timer triggered - proceeding to main app');
       handleVideoComplete();
-    }, 5000); // 5 seconds fallback
+    }, 10000); // Increased to 10 seconds to give video more time
 
     return () => clearTimeout(fallbackTimer);
   }, [handleVideoComplete]);
 
-  const handleVideoLoad = () => {
-    console.log('Video loaded successfully');
+  const handleVideoLoad = (data: any) => {
+    console.log('Video loaded successfully', data);
+    setVideoLoaded(true);
+    if (data.durationMillis) {
+      setVideoDuration(data.durationMillis / 1000);
+      console.log('Video duration:', data.durationMillis / 1000, 'seconds');
+    }
   };
 
   const handleVideoError = async (error: any) => {
@@ -48,6 +59,14 @@ export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoCom
   };
 
   const handlePlaybackStatusUpdate = (status: any) => {
+    console.log('Playback status update:', {
+      isLoaded: status.isLoaded,
+      isPlaying: status.isPlaying,
+      positionMillis: status.positionMillis,
+      durationMillis: status.durationMillis,
+      didJustFinish: status.didJustFinish
+    });
+    
     if (status.isLoaded && status.didJustFinish) {
       console.log('Video playback status: finished');
       handleVideoComplete();
