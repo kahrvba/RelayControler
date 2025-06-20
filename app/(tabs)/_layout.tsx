@@ -1,29 +1,37 @@
 import { HapticTab } from '@/components/HapticTab';
+import { useTheme } from '@/components/ThemeProvider';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { SignedIn, SignedOut } from '@clerk/clerk-expo';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { isDarkMode, colors } = useTheme();
 
   return (
     <>
       <SignedIn>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+            tabBarActiveTintColor: colors.primary,
+            tabBarInactiveTintColor: colors.textSecondary,
             headerShown: false,
             tabBarButton: HapticTab,
-            tabBarBackground: TabBarBackground,
-            tabBarStyle: Platform.select({
-              ios: { position: 'absolute' },
-              default: {},
-            }),
+            tabBarStyle: {
+              position: 'absolute',
+              height: 88,
+              paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+              paddingTop: 8,
+              backgroundColor: colors.surface,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              shadowColor: colors.shadow,
+              shadowOpacity: isDarkMode ? 0.3 : 0.1,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: -2 },
+              elevation: 8,
+            },
           }}
         >
           <Tabs.Screen
