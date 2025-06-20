@@ -22,6 +22,14 @@ interface Relay {
   state: number;
 }
 
+interface AddRelayItem {
+  id: string;
+  relay_name: string;
+  state: number;
+}
+
+type RelayOrAddItem = Relay | AddRelayItem;
+
 export default function App() {
   const { user, isLoaded } = useUser();
   const [project, setProject] = React.useState<{ id: number; project_name: string } | null>(null);
@@ -250,53 +258,56 @@ export default function App() {
           ) : project ? (
             <>
               <FlatList
-                data={relays}
+                data={[...relays, { id: 'add-relay', relay_name: 'ADD', state: -1 }] as RelayOrAddItem[]}
                 keyExtractor={item => item.id.toString()}
                 numColumns={2}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 contentContainerStyle={{ paddingBottom: 120 }}
-                renderItem={renderRelayCard}
+                renderItem={({ item }) => {
+                  if (item.id === 'add-relay') {
+                    return (
+                      <TouchableOpacity
+                        onPress={addRelay}
+                        disabled={adding}
+                        style={{
+                          backgroundColor: '#f8fafc',
+                          borderRadius: 24,
+                          padding: 20,
+                          marginBottom: 16,
+                          width: (width - 72) / 2,
+                          shadowColor: '#94a3b8',
+                          shadowOpacity: 0.15,
+                          shadowRadius: 10,
+                          elevation: 6,
+                          borderWidth: 1.25,
+                          borderColor: '#d1d5db',
+                          borderStyle: 'dashed',
+                          opacity: adding ? 0.7 : 1,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minHeight: 80,
+                        }}
+                      >
+                        <MaterialCommunityIcons 
+                          name="plus" 
+                          size={32} 
+                          color="#94a3b8" 
+                        />
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '600',
+                          color: '#94a3b8',
+                          marginTop: 8,
+                          textAlign: 'center'
+                        }}>
+                          Add Relay
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                  return renderRelayCard({ item: item as Relay });
+                }}
                 showsVerticalScrollIndicator={false}
-                ListFooterComponent={() => (
-                  <TouchableOpacity
-                    onPress={addRelay}
-                    disabled={adding}
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      borderRadius: 24,
-                      padding: 20,
-                      marginBottom: 16,
-                      width: (width - 72) / 2,
-                      alignSelf: 'center',
-                      shadowColor: '#94a3b8',
-                      shadowOpacity: 0.15,
-                      shadowRadius: 10,
-                      elevation: 6,
-                      borderWidth: 1.25,
-                      borderColor: '#d1d5db',
-                      borderStyle: 'dashed',
-                      opacity: adding ? 0.7 : 1,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 80,
-                    }}
-                  >
-                    <MaterialCommunityIcons 
-                      name="plus" 
-                      size={32} 
-                      color="#94a3b8" 
-                    />
-                    <Text style={{
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: '#94a3b8',
-                      marginTop: 8,
-                      textAlign: 'center'
-                    }}>
-                      Add Relay
-                    </Text>
-                  </TouchableOpacity>
-                )}
               />
             </>
           ) : (
