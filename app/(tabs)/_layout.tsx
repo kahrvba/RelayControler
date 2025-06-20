@@ -20,9 +20,9 @@ export default function TabLayout() {
             tabBarButton: HapticTab,
             tabBarStyle: {
               position: 'absolute',
-              height: 88,
-              paddingBottom: Platform.OS === 'ios' ? 20 : 16,
-              paddingTop: 8,
+              height: 72,
+              paddingBottom: Platform.OS === 'ios' ? 10 : 6,
+              paddingTop: 4,
               backgroundColor: colors.surface,
               borderTopWidth: 1,
               borderTopColor: colors.border,
