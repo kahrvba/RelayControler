@@ -110,6 +110,12 @@ export default function App() {
           )
         );
       })
+      .on('broadcast', { event: 'relay-delete' }, (payload: any) => {
+        const { relay_id } = payload.payload;
+        setRelays(prevRelays => 
+          prevRelays.filter(relay => relay.id !== relay_id)
+        );
+      })
       .subscribe();
 
     // Realtime listener for database changes (fallback)

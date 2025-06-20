@@ -2,7 +2,7 @@ import "@/global.css";
 import { useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from "react";
-import { Alert, Platform, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, Platform, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
 import { useProject } from "../../components/ProjectProvider";
@@ -40,6 +40,7 @@ export default function SettingsScreen() {
   const [loading, setLoading] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [relays, setRelays] = React.useState<Relay[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
   // Fetch relays when project changes
   React.useEffect(() => {
@@ -147,36 +148,7 @@ export default function SettingsScreen() {
       return;
     }
 
-    if (Platform.OS === 'ios') {
-      // iOS: Use ActionSheet-style alert
-      const relayOptions = relays.map(relay => ({
-        text: relay.relay_name,
-        onPress: () => confirmDeleteRelay(relay)
-      }));
-
-      Alert.alert(
-        "Delete Relay",
-        "Select a relay to delete:",
-        [
-          { text: "Cancel", style: "cancel" },
-          ...relayOptions
-        ]
-      );
-    } else {
-      // Android: Show custom selection
-      const relayNames = relays.map(relay => relay.relay_name);
-      Alert.alert(
-        "Delete Relay",
-        "Select a relay to delete:",
-        [
-          { text: "Cancel", style: "cancel" },
-          ...relayNames.map((name, index) => ({
-            text: name,
-            onPress: () => confirmDeleteRelay(relays[index])
-          }))
-        ]
-      );
-    }
+    setShowDeleteModal(true);
   };
 
   const confirmDeleteRelay = (relay: Relay) => {
@@ -213,6 +185,13 @@ export default function SettingsScreen() {
       if (error) {
         throw error;
       }
+
+      // Send broadcast for relay deletion
+      await supabase.channel('realtime:relays').send({
+        type: 'broadcast',
+        event: 'relay-delete',
+        payload: { relay_id: relay.id }
+      });
 
       // Update local state
       setRelays(prevRelays => prevRelays.filter(r => r.id !== relay.id));
@@ -525,6 +504,105 @@ export default function SettingsScreen() {
             </View>
           ))}
         </ScrollView>
+
+        {/* Custom Delete Relay Modal */}
+        <Modal
+          visible={showDeleteModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 40,
+          }}>
+            <View style={{
+              backgroundColor: colors.surface,
+              borderRadius: 20,
+              padding: 24,
+              width: '100%',
+              maxWidth: 320,
+              shadowColor: colors.shadow,
+              shadowOpacity: isDarkMode ? 0.3 : 0.2,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 10,
+            }}>
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: colors.text,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}>
+                Delete Relay
+              </Text>
+              
+              <Text style={{
+                fontSize: 14,
+                color: colors.textSecondary,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                Select a relay to delete:
+              </Text>
+              
+              <ScrollView 
+                style={{ maxHeight: 200 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {relays.map((relay) => (
+                  <TouchableOpacity
+                    key={relay.id}
+                    onPress={() => {
+                      setShowDeleteModal(false);
+                      confirmDeleteRelay(relay);
+                    }}
+                    style={{
+                      backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 8,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: '600',
+                      color: colors.text,
+                      textAlign: 'center',
+                    }}>
+                      {relay.relay_name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              
+              <TouchableOpacity
+                onPress={() => setShowDeleteModal(false)}
+                style={{
+                  backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  marginTop: 16,
+                }}
+              >
+                <Text style={{
+                  color: colors.text,
+                  fontSize: 16,
+                  fontWeight: '600',
+                }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </View>
   );
