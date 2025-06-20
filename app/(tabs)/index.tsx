@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
 import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
@@ -41,6 +41,7 @@ export default function App() {
   const { isDarkMode, colors } = useTheme();
   const { connectionStatus, autoConnect } = useConnection();
   const { project, loading: projectLoading, updateProject, refreshProject } = useProject();
+  const insets = useSafeAreaInsets();
   const [inputProject, setInputProject] = React.useState("");
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -375,17 +376,13 @@ export default function App() {
       onLongPress={() => renameRelay(item)}
       disabled={updating === item.id}
       style={{
-        backgroundColor: item.state === 1 ? (isDarkMode ? '#0e7490' : '#a5f3fc') : (isDarkMode ? '#374151' : '#f3f4f6'),
+        backgroundColor: 'transparent',
         borderRadius: 24,
         padding: 20,
         marginBottom: 16,
         width: (width - 72) / 2,
         alignSelf: 'center',
-        shadowColor: colors.shadow,
-        shadowOpacity: isDarkMode ? 0.3 : 0.15,
-        shadowRadius: 10,
-        elevation: 6,
-        borderWidth: 1.25,
+        borderWidth: 2,
         borderColor: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.border,
         opacity: updating === item.id ? 0.7 : 1
       }}
@@ -393,7 +390,7 @@ export default function App() {
       <Text style={{
         fontSize: 18,
         fontWeight: '700',
-        color: item.state === 1 ? (isDarkMode ? '#e0f2fe' : '#0e7490') : colors.text,
+        color: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.text,
         marginBottom: 8,
         textAlign: 'center'
       }}>
@@ -403,7 +400,7 @@ export default function App() {
       <Text style={{
         fontSize: 14,
         fontWeight: '600',
-        color: item.state === 1 ? (isDarkMode ? '#e0f2fe' : '#0e7490') : colors.textSecondary,
+        color: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.textSecondary,
         textAlign: 'center',
         opacity: 0.85
       }}>
@@ -456,7 +453,12 @@ export default function App() {
           </View>
         </View>
 
-        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
+        <View style={{ 
+          flex: 1, 
+          paddingHorizontal: 24, 
+          paddingTop: 24,
+          paddingBottom: 72 + insets.bottom + 20, // Account for tab bar height
+        }}>
           {!isLoaded || loading || projectLoading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -478,16 +480,12 @@ export default function App() {
                         onPress={addRelay}
                         disabled={isAddingRelay}
                         style={{
-                          backgroundColor: isDarkMode ? '#374151' : '#f8fafc',
+                          backgroundColor: 'transparent',
                           borderRadius: 24,
                           padding: 20,
                           marginBottom: 16,
                           width: (width - 72) / 2,
-                          shadowColor: colors.shadow,
-                          shadowOpacity: isDarkMode ? 0.3 : 0.15,
-                          shadowRadius: 10,
-                          elevation: 6,
-                          borderWidth: 1.25,
+                          borderWidth: 2,
                           borderColor: colors.border,
                           borderStyle: 'dashed',
                           opacity: isAddingRelay ? 0.7 : 1,
