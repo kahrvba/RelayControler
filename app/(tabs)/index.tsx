@@ -62,15 +62,34 @@ export default function App() {
       }
     }
     fetchRelays();
-    const channel = supabase
+    
+    // Realtime broadcast listener for instant updates
+    const broadcastChannel = supabase
+      .channel('realtime:relays')
+      .on('broadcast', { event: 'relay-update' }, (payload: any) => {
+        const { relay_id, state } = payload.payload;
+        setRelays(prevRelays => 
+          prevRelays.map(relay => 
+            relay.id === relay_id 
+              ? { ...relay, state } 
+              : relay
+          )
+        );
+      })
+      .subscribe();
+
+    // Realtime listener for database changes (fallback)
+    const dbChannel = supabase
       .channel('relay-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'relays', filter: `project_id=eq.${project.id}` }, () => {
         fetchRelays();
       })
       .subscribe();
+      
     return () => {
       ignore = true;
-      supabase.removeChannel(channel);
+      supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(dbChannel);
     };
   }, [project]);
 
@@ -99,13 +118,47 @@ export default function App() {
     setAdding(false);
   };
 
+  // Send broadcast for relay state update
+  const sendRelayBroadcast = async (relay_id: number, state: number) => {
+    try {
+      await supabase.channel('realtime:relays').send({
+        type: 'broadcast',
+        event: 'relay-update',
+        payload: { relay_id, state }
+      });
+    } catch (error) {
+      console.error('Error sending relay broadcast:', error);
+    }
+  };
+
+  // Toggle relay state
   const toggleRelay = async (relay: Relay) => {
     setUpdating(relay.id);
-    await supabase
-      .from("relays")
-      .update({ state: relay.state === 1 ? 0 : 1 })
-      .eq("id", relay.id);
-    setUpdating(null);
+    const newState = relay.state === 1 ? 0 : 1;
+    
+    try {
+      // Update database
+      await supabase
+        .from("relays")
+        .update({ state: newState })
+        .eq("id", relay.id);
+      
+      // Broadcast the update for instant UI feedback
+      await sendRelayBroadcast(relay.id, newState);
+      
+      // Update local state immediately for instant feedback
+      setRelays(prevRelays => 
+        prevRelays.map(r => 
+          r.id === relay.id 
+            ? { ...r, state: newState } 
+            : r
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling relay:', error);
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const renderRelayCard = ({ item }: { item: Relay }) => (
