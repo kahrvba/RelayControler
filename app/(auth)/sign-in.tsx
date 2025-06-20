@@ -5,6 +5,7 @@ import React from 'react'
 import {
   ActivityIndicator,
   Image,
+  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -90,7 +91,7 @@ export default function Page() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         {!!error && <Text style={styles.errorText}>{error}</Text>}
         <Image
@@ -167,7 +168,7 @@ export default function Page() {
           <Text style={styles.link}>{t('auth.signUp')}</Text>
         </Link>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

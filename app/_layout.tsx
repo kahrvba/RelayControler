@@ -35,7 +35,11 @@ function AppContent() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
-              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <StatusBar 
+                style={colorScheme === 'dark' ? 'light' : 'dark'}
+                backgroundColor="transparent"
+                translucent={true}
+              />
             </ThemeProvider>
           </ConnectionProvider>
         </ProjectProvider>

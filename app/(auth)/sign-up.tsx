@@ -2,7 +2,8 @@ import { useOAuth, useSignUp } from '@clerk/clerk-expo'
 import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
 import * as React from 'react'
-import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native'
+import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLanguage } from "../../components/LanguageProvider"
 
 export default function SignUpScreen() {
@@ -80,7 +81,7 @@ export default function SignUpScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         {!!error && <Text style={styles.errorText}>{error}</Text>}
         <Image
@@ -165,7 +166,7 @@ export default function SignUpScreen() {
           <Text style={styles.link}>{t('auth.signIn')}</Text>
         </Link>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

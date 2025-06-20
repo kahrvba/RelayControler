@@ -420,7 +420,7 @@ export default function App() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, paddingTop: insets.top }}>
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
