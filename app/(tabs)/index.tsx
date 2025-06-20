@@ -1,3 +1,4 @@
+import { useProject } from '@/components/ProjectProvider';
 import "@/global.css";
 import { useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -36,11 +37,11 @@ export default function App() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, colors } = useTheme();
   const { connectionStatus, autoConnect } = useConnection();
-  const [project, setProject] = React.useState<{ id: number; project_name: string } | null>(null);
+  const { project, loading: projectLoading, updateProject } = useProject();
   const [inputProject, setInputProject] = React.useState("");
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [loading, setLoading] = React.useState(false);
-  const [adding, setAdding] = React.useState(false);
+  const [isAddingRelay, setIsAddingRelay] = React.useState(false);
   const [updating, setUpdating] = React.useState<number | null>(null);
 
   const getConnectionStatusText = () => {
@@ -68,21 +69,6 @@ export default function App() {
         return colors.textSecondary;
     }
   };
-
-  React.useEffect(() => {
-    if (!isLoaded || !user) return;
-    setLoading(true);
-    async function fetchProject() {
-      const { data } = await supabase
-        .from("projects")
-        .select("id, project_name")
-        .eq("user_id", user!.id)
-        .single();
-      setProject(data || null);
-      setLoading(false);
-    }
-    fetchProject();
-  }, [isLoaded, user]);
 
   React.useEffect(() => {
     if (!project) return;
@@ -139,13 +125,15 @@ export default function App() {
       .insert({ user_id: user.id, project_name: inputProject.trim() })
       .select("id, project_name")
       .single();
-    setProject(data);
+    if (data) {
+      updateProject(data);
+    }
     setLoading(false);
   };
 
   const addRelay = async () => {
     if (!project) return;
-    setAdding(true);
+    setIsAddingRelay(true);
     
     try {
       // Query the current MAX(id) from relays table for this project
@@ -192,7 +180,7 @@ export default function App() {
     } catch (error) {
       console.error('Error adding relay:', error);
     } finally {
-      setAdding(false);
+      setIsAddingRelay(false);
     }
   };
 
@@ -326,7 +314,7 @@ export default function App() {
         </View>
 
         <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
-          {!isLoaded || loading ? (
+          {!isLoaded || loading || projectLoading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
@@ -343,7 +331,7 @@ export default function App() {
                     return (
                       <TouchableOpacity
                         onPress={addRelay}
-                        disabled={adding}
+                        disabled={isAddingRelay}
                         style={{
                           backgroundColor: isDarkMode ? '#374151' : '#f8fafc',
                           borderRadius: 24,
@@ -357,7 +345,7 @@ export default function App() {
                           borderWidth: 1.25,
                           borderColor: colors.border,
                           borderStyle: 'dashed',
-                          opacity: adding ? 0.7 : 1,
+                          opacity: isAddingRelay ? 0.7 : 1,
                           alignItems: 'center',
                           justifyContent: 'center',
                           minHeight: 80,

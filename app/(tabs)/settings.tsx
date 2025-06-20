@@ -5,6 +5,7 @@ import React from "react";
 import { Alert, Platform, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
+import { useProject } from "../../components/ProjectProvider";
 import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
 
@@ -28,7 +29,7 @@ export default function SettingsScreen() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { connectionStatus, autoConnect, setAutoConnect, manualConnect } = useConnection();
-  const [project, setProject] = React.useState<{ id: number; project_name: string } | null>(null);
+  const { project, loading: projectLoading, refreshProject, updateProjectName } = useProject();
   const [loading, setLoading] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 
@@ -67,22 +68,6 @@ export default function SettingsScreen() {
     }
   };
 
-  // Fetch project for this user
-  React.useEffect(() => {
-    if (!isLoaded || !user) return;
-    setLoading(true);
-    async function fetchProject() {
-      const { data } = await supabase
-        .from("projects")
-        .select("id, project_name")
-        .eq("user_id", user!.id)
-        .single();
-      setProject(data || null);
-      setLoading(false);
-    }
-    fetchProject();
-  }, [isLoaded, user]);
-
   const handleDeleteProject = () => {
     Alert.alert(
       "Delete Project",
@@ -97,7 +82,7 @@ export default function SettingsScreen() {
             try {
               await supabase.from("relays").delete().eq("project_id", project.id);
               await supabase.from("projects").delete().eq("id", project.id);
-              setProject(null);
+              await refreshProject();
             } catch (error) {
               console.error('Error deleting project:', error);
             }
@@ -118,16 +103,22 @@ export default function SettingsScreen() {
             text: "Rename",
             onPress: async (newName) => {
               if (!project || !newName?.trim()) return;
+              
+              // Instantly update the UI
+              updateProjectName(newName.trim());
+              
               try {
-                const { data } = await supabase
+                // Update the database in the background
+                await supabase
                   .from("projects")
                   .update({ project_name: newName.trim() })
-                  .eq("id", project.id)
-                  .select("id, project_name")
-                  .single();
-                setProject(data);
+                  .eq("id", project.id);
+                // Refresh to ensure we have the latest data
+                await refreshProject();
               } catch (error) {
                 console.error('Error renaming project:', error);
+                // If there's an error, refresh to revert to the original name
+                await refreshProject();
               }
             }
           }
@@ -145,7 +136,46 @@ export default function SettingsScreen() {
     }
   };
 
+  const getSignUpMethod = () => {
+    if (user?.primaryEmailAddress?.emailAddress) {
+      return {
+        type: 'email',
+        value: user.primaryEmailAddress.emailAddress,
+        icon: 'email-outline',
+        title: 'Email'
+      };
+    } else if (user?.primaryPhoneNumber?.phoneNumber) {
+      return {
+        type: 'phone',
+        value: user.primaryPhoneNumber.phoneNumber,
+        icon: 'phone-outline',
+        title: 'Phone'
+      };
+    } else {
+      return {
+        type: 'unknown',
+        value: 'Not available',
+        icon: 'account-outline',
+        title: 'Sign-up Method'
+      };
+    }
+  };
+
+  const signUpMethod = getSignUpMethod();
+
   const settingsSections: SettingsSection[] = [
+    {
+      title: "Account",
+      items: [
+        {
+          id: "signup-method",
+          title: signUpMethod.title,
+          subtitle: signUpMethod.value,
+          icon: signUpMethod.icon,
+          type: "info"
+        }
+      ]
+    },
     {
       title: "Project",
       items: [
@@ -242,7 +272,7 @@ export default function SettingsScreen() {
           subtitle: "Relay Control App",
           icon: "help-circle-outline",
           type: "button",
-          onPress: () => Alert.alert("About", "Relay Control App\nVersion 1.0.0\n\nControl your relays with ease.")
+          onPress: () => Alert.alert("About", "Relay Control App\nVersion 1.0.0\n\nControl your devices with ease.")
         }
       ]
     }
@@ -263,7 +293,7 @@ export default function SettingsScreen() {
       borderColor: colors.border,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 }}>
           <View style={{
             backgroundColor: isDarkMode ? '#374151' : '#f8fafc',
             borderRadius: 12,
@@ -310,13 +340,18 @@ export default function SettingsScreen() {
         {item.type === 'button' && (
           <TouchableOpacity
             onPress={item.onPress}
+            activeOpacity={0.7}
             style={{
               backgroundColor: item.id === 'delete-project' ? '#fee2e2' : (isDarkMode ? '#374151' : '#f3f4f6'),
               borderRadius: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
               borderWidth: 1,
               borderColor: item.id === 'delete-project' ? '#fecaca' : colors.border,
+              minWidth: 70,
+              minHeight: 32,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <Text style={{
@@ -324,7 +359,7 @@ export default function SettingsScreen() {
               fontWeight: '600',
               color: item.id === 'delete-project' ? '#ef4444' : colors.textSecondary,
             }}>
-              {item.id === 'delete-project' ? 'Delete' : item.id === 'manual-connect' ? 'Connect' : 'Action'}
+              {item.id === 'delete-project' ? 'Delete' : item.id === 'manual-connect' ? 'Connect' : item.id === 'rename-project' ? 'Rename' : 'Action'}
             </Text>
           </TouchableOpacity>
         )}

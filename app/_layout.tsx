@@ -1,4 +1,5 @@
 import { ConnectionProvider } from '@/components/ConnectionProvider';
+import { ProjectProvider } from '@/components/ProjectProvider';
 import { ThemeProvider as CustomThemeProvider } from '@/components/ThemeProvider';
 import '@/global.css';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -24,16 +25,18 @@ function AppContent() {
 
   return (
     <CustomThemeProvider>
-      <ConnectionProvider userId={user?.id} isUserLoaded={isLoaded}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </ConnectionProvider>
+      <ProjectProvider userId={user?.id} isUserLoaded={isLoaded}>
+        <ConnectionProvider userId={user?.id} isUserLoaded={isLoaded}>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </ConnectionProvider>
+      </ProjectProvider>
     </CustomThemeProvider>
   );
 }
