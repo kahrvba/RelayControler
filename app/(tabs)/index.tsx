@@ -697,22 +697,6 @@ export default function App() {
             </View>
           </View>
         </Modal>
-
-        {/* Debug indicator - remove this later */}
-        {showNameModal && (
-          <View style={{
-            position: 'absolute',
-            top: 50,
-            right: 20,
-            backgroundColor: 'red',
-            padding: 10,
-            borderRadius: 5,
-          }}>
-            <Text style={{ color: 'white', fontSize: 12 }}>
-              Modal should be visible
-            </Text>
-          </View>
-        )}
       </SafeAreaView>
     </View>
   );
