@@ -8,6 +8,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Text,
@@ -595,105 +596,110 @@ export default function App() {
           animationType="fade"
           onRequestClose={handleNameModalCancel}
         >
-          <View style={{
-            flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 40,
-          }}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
             <View style={{
-              backgroundColor: colors.surface,
-              borderRadius: 20,
-              padding: 24,
-              width: '100%',
-              maxWidth: 320,
-              shadowColor: colors.shadow,
-              shadowOpacity: isDarkMode ? 0.3 : 0.2,
-              shadowRadius: 20,
-              shadowOffset: { width: 0, height: 10 },
-              elevation: 10,
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 40,
             }}>
-              <Text style={{
-                fontSize: 20,
-                fontWeight: '700',
-                color: colors.text,
-                marginBottom: 8,
-                textAlign: 'center',
+              <View style={{
+                backgroundColor: colors.surface,
+                borderRadius: 20,
+                padding: 24,
+                width: '100%',
+                maxWidth: 320,
+                shadowColor: colors.shadow,
+                shadowOpacity: isDarkMode ? 0.3 : 0.2,
+                shadowRadius: 20,
+                shadowOffset: { width: 0, height: 10 },
+                elevation: 10,
               }}>
-                {nameModalType === 'add' ? 'Add New Relay' : 'Rename Relay'}
-              </Text>
-              
-              <Text style={{
-                fontSize: 14,
-                color: colors.textSecondary,
-                marginBottom: 20,
-                textAlign: 'center',
-              }}>
-                {nameModalType === 'add' ? 'Enter a name for your new relay' : 'Enter a new name for this relay'}
-              </Text>
-              
-              <TextInput
-                value={nameInput}
-                onChangeText={setNameInput}
-                placeholder="Enter relay name"
-                placeholderTextColor={colors.textSecondary}
-                style={{
-                  backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
-                  borderRadius: 12,
-                  padding: 16,
-                  fontSize: 16,
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: '700',
                   color: colors.text,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  marginBottom: 20,
-                }}
-                autoFocus={true}
-                onSubmitEditing={handleNameModalSubmit}
-              />
-              
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <TouchableOpacity
-                  onPress={handleNameModalCancel}
-                  style={{
-                    flex: 1,
-                    backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
-                    borderRadius: 12,
-                    paddingVertical: 14,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{
-                    color: colors.text,
-                    fontSize: 16,
-                    fontWeight: '600',
-                  }}>
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
+                  marginBottom: 8,
+                  textAlign: 'center',
+                }}>
+                  {nameModalType === 'add' ? 'Add New Relay' : 'Rename Relay'}
+                </Text>
                 
-                <TouchableOpacity
-                  onPress={handleNameModalSubmit}
-                  disabled={!nameInput.trim()}
+                <Text style={{
+                  fontSize: 14,
+                  color: colors.textSecondary,
+                  marginBottom: 20,
+                  textAlign: 'center',
+                }}>
+                  {nameModalType === 'add' ? 'Enter a name for your new relay' : 'Enter a new name for this relay'}
+                </Text>
+                
+                <TextInput
+                  value={nameInput}
+                  onChangeText={setNameInput}
+                  placeholder="Enter relay name"
+                  placeholderTextColor={colors.textSecondary}
                   style={{
-                    flex: 1,
-                    backgroundColor: nameInput.trim() ? colors.primary : colors.border,
+                    backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
                     borderRadius: 12,
-                    paddingVertical: 14,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{
-                    color: nameInput.trim() ? '#ffffff' : colors.textSecondary,
+                    padding: 16,
                     fontSize: 16,
-                    fontWeight: '600',
-                  }}>
-                    {nameModalType === 'add' ? 'Add' : 'Rename'}
-                  </Text>
-                </TouchableOpacity>
+                    color: colors.text,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    marginBottom: 20,
+                  }}
+                  autoFocus={true}
+                  onSubmitEditing={handleNameModalSubmit}
+                />
+                
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <TouchableOpacity
+                    onPress={handleNameModalCancel}
+                    style={{
+                      flex: 1,
+                      backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}>
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={handleNameModalSubmit}
+                    disabled={!nameInput.trim()}
+                    style={{
+                      flex: 1,
+                      backgroundColor: nameInput.trim() ? colors.primary : colors.border,
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{
+                      color: nameInput.trim() ? '#ffffff' : colors.textSecondary,
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}>
+                      {nameModalType === 'add' ? 'Add' : 'Rename'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </SafeAreaView>
     </View>
