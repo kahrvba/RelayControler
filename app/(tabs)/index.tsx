@@ -5,8 +5,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
+  Modal,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
@@ -44,6 +47,10 @@ export default function App() {
   const [isAddingRelay, setIsAddingRelay] = React.useState(false);
   const [updating, setUpdating] = React.useState<number | null>(null);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [showNameModal, setShowNameModal] = React.useState(false);
+  const [nameInput, setNameInput] = React.useState("");
+  const [nameModalType, setNameModalType] = React.useState<'add' | 'rename'>('add');
+  const [relayToRename, setRelayToRename] = React.useState<Relay | null>(null);
 
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
@@ -134,6 +141,70 @@ export default function App() {
 
   const addRelay = async () => {
     if (!project) return;
+    
+    console.log('Platform:', Platform.OS); // Debug log
+    console.log('addRelay function called'); // Debug log
+    
+    // Temporarily force modal on both platforms for testing
+    console.log('Showing modal for testing'); // Debug log
+    setNameModalType('add');
+    setNameInput("");
+    setShowNameModal(true);
+    
+    // Comment out the platform-specific code for now
+    /*
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        "Add New Relay",
+        "Enter relay name:",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Add",
+            onPress: async (relayName) => {
+              if (!relayName?.trim()) return;
+              await createRelay(relayName.trim());
+            }
+          }
+        ],
+        "plain-text",
+        ""
+      );
+    } else {
+      // Android: Show custom modal
+      console.log('Showing Android modal'); // Debug log
+      setNameModalType('add');
+      setNameInput("");
+      setShowNameModal(true);
+    }
+    */
+  };
+
+  const handleNameModalSubmit = async () => {
+    console.log('Modal submit called with:', nameInput); // Debug log
+    if (!nameInput.trim()) return;
+    
+    if (nameModalType === 'add') {
+      console.log('Creating relay with name:', nameInput.trim()); // Debug log
+      await createRelay(nameInput.trim());
+    } else if (nameModalType === 'rename' && relayToRename) {
+      await updateRelayName(relayToRename.id, nameInput.trim());
+    }
+    
+    setShowNameModal(false);
+    setNameInput("");
+    setRelayToRename(null);
+  };
+
+  const handleNameModalCancel = () => {
+    console.log('Modal cancelled'); // Debug log
+    setShowNameModal(false);
+    setNameInput("");
+    setRelayToRename(null);
+  };
+
+  const createRelay = async (relayName: string) => {
+    console.log('createRelay called with:', relayName); // Debug log
     setIsAddingRelay(true);
     
     try {
@@ -141,7 +212,7 @@ export default function App() {
       const { data: maxIdResult, error: maxIdError } = await supabase
         .from("relays")
         .select("id")
-        .eq("project_id", project.id)
+        .eq("project_id", project!.id)
         .order("id", { ascending: false })
         .limit(1)
         .single();
@@ -153,17 +224,15 @@ export default function App() {
 
       // Calculate new ID: max + 1, or 1 if table is empty
       const newId = maxIdResult ? maxIdResult.id + 1 : 1;
-      
-      // Calculate relay name based on current count
-      const nextIndex = relays.length;
-      const relayName = `p${nextIndex}`;
 
-      // Explicitly insert with calculated ID
+      console.log('Creating relay with ID:', newId, 'and name:', relayName); // Debug log
+
+      // Insert with custom name
       const { data: newRelay, error: insertError } = await supabase
         .from("relays")
         .insert({
           id: newId,
-          project_id: project.id,
+          project_id: project!.id,
           relay_name: relayName,
           state: 0,
         })
@@ -175,6 +244,8 @@ export default function App() {
         throw insertError;
       }
 
+      console.log('Relay created successfully:', newRelay); // Debug log
+
       // Add to local state
       setRelays(prevRelays => [...prevRelays, newRelay]);
       
@@ -182,6 +253,54 @@ export default function App() {
       console.error('Error adding relay:', error);
     } finally {
       setIsAddingRelay(false);
+    }
+  };
+
+  const renameRelay = async (relay: Relay) => {
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        "Rename Relay",
+        "Enter new relay name:",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Rename",
+            onPress: async (newName) => {
+              if (!newName?.trim()) return;
+              await updateRelayName(relay.id, newName.trim());
+            }
+          }
+        ],
+        "plain-text",
+        relay.relay_name
+      );
+    } else {
+      // Android: Show custom modal
+      setNameModalType('rename');
+      setNameInput(relay.relay_name);
+      setRelayToRename(relay);
+      setShowNameModal(true);
+    }
+  };
+
+  const updateRelayName = async (relayId: number, newName: string) => {
+    try {
+      // Update database
+      await supabase
+        .from("relays")
+        .update({ relay_name: newName })
+        .eq("id", relayId);
+      
+      // Update local state
+      setRelays(prevRelays => 
+        prevRelays.map(r => 
+          r.id === relayId 
+            ? { ...r, relay_name: newName } 
+            : r
+        )
+      );
+    } catch (error) {
+      console.error('Error renaming relay:', error);
     }
   };
 
@@ -253,6 +372,7 @@ export default function App() {
   const renderRelayCard = ({ item }: { item: Relay }) => (
     <TouchableOpacity
       onPress={() => toggleRelay(item)}
+      onLongPress={() => renameRelay(item)}
       disabled={updating === item.id}
       style={{
         backgroundColor: item.state === 1 ? (isDarkMode ? '#0e7490' : '#a5f3fc') : (isDarkMode ? '#374151' : '#f3f4f6'),
@@ -469,6 +589,130 @@ export default function App() {
             </View>
           )}
         </View>
+
+        {/* Custom Name Modal for Android */}
+        <Modal
+          visible={showNameModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={handleNameModalCancel}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 40,
+          }}>
+            <View style={{
+              backgroundColor: colors.surface,
+              borderRadius: 20,
+              padding: 24,
+              width: '100%',
+              maxWidth: 320,
+              shadowColor: colors.shadow,
+              shadowOpacity: isDarkMode ? 0.3 : 0.2,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 10,
+            }}>
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: colors.text,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}>
+                {nameModalType === 'add' ? 'Add New Relay' : 'Rename Relay'}
+              </Text>
+              
+              <Text style={{
+                fontSize: 14,
+                color: colors.textSecondary,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                {nameModalType === 'add' ? 'Enter a name for your new relay' : 'Enter a new name for this relay'}
+              </Text>
+              
+              <TextInput
+                value={nameInput}
+                onChangeText={setNameInput}
+                placeholder="Enter relay name"
+                placeholderTextColor={colors.textSecondary}
+                style={{
+                  backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+                  borderRadius: 12,
+                  padding: 16,
+                  fontSize: 16,
+                  color: colors.text,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  marginBottom: 20,
+                }}
+                autoFocus={true}
+                onSubmitEditing={handleNameModalSubmit}
+              />
+              
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity
+                  onPress={handleNameModalCancel}
+                  style={{
+                    flex: 1,
+                    backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
+                    borderRadius: 12,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{
+                    color: colors.text,
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  onPress={handleNameModalSubmit}
+                  disabled={!nameInput.trim()}
+                  style={{
+                    flex: 1,
+                    backgroundColor: nameInput.trim() ? colors.primary : colors.border,
+                    borderRadius: 12,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{
+                    color: nameInput.trim() ? '#ffffff' : colors.textSecondary,
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}>
+                    {nameModalType === 'add' ? 'Add' : 'Rename'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Debug indicator - remove this later */}
+        {showNameModal && (
+          <View style={{
+            position: 'absolute',
+            top: 50,
+            right: 20,
+            backgroundColor: 'red',
+            padding: 10,
+            borderRadius: 5,
+          }}>
+            <Text style={{ color: 'white', fontSize: 12 }}>
+              Modal should be visible
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );
