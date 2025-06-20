@@ -9,6 +9,12 @@ import { useProject } from "../../components/ProjectProvider";
 import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
 
+interface Relay {
+  id: number;
+  relay_name: string;
+  state: number;
+}
+
 interface SettingsSection {
   title: string;
   items: SettingsItem[];
@@ -33,6 +39,28 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [relays, setRelays] = React.useState<Relay[]>([]);
+
+  // Fetch relays when project changes
+  React.useEffect(() => {
+    if (!project) return;
+    
+    async function fetchRelays() {
+      try {
+        const { data } = await supabase
+          .from("relays")
+          .select("id, relay_name, state")
+          .eq("project_id", project?.id)
+          .order("relay_name");
+        setRelays(data || []);
+      } catch (error) {
+        console.error('Error fetching relays:', error);
+        setRelays([]);
+      }
+    }
+    
+    fetchRelays();
+  }, [project]);
 
   const handleManualConnect = async () => {
     try {
@@ -110,6 +138,91 @@ export default function SettingsScreen() {
         "Rename functionality requires iOS. Please use the web interface to rename your project.",
         [{ text: "OK" }]
       );
+    }
+  };
+
+  const handleDeleteRelay = () => {
+    if (!relays.length) {
+      Alert.alert("No Relays", "There are no relays to delete.");
+      return;
+    }
+
+    if (Platform.OS === 'ios') {
+      // iOS: Use ActionSheet-style alert
+      const relayOptions = relays.map(relay => ({
+        text: relay.relay_name,
+        onPress: () => confirmDeleteRelay(relay)
+      }));
+
+      Alert.alert(
+        "Delete Relay",
+        "Select a relay to delete:",
+        [
+          { text: "Cancel", style: "cancel" },
+          ...relayOptions
+        ]
+      );
+    } else {
+      // Android: Show custom selection
+      const relayNames = relays.map(relay => relay.relay_name);
+      Alert.alert(
+        "Delete Relay",
+        "Select a relay to delete:",
+        [
+          { text: "Cancel", style: "cancel" },
+          ...relayNames.map((name, index) => ({
+            text: name,
+            onPress: () => confirmDeleteRelay(relays[index])
+          }))
+        ]
+      );
+    }
+  };
+
+  const confirmDeleteRelay = (relay: Relay) => {
+    Alert.alert(
+      "Confirm Delete",
+      `Are you sure you want to delete "${relay.relay_name}"? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: () => deleteRelay(relay)
+        }
+      ]
+    );
+  };
+
+  const deleteRelay = async (relay: Relay) => {
+    if (!project) {
+      Alert.alert("Error", "No project found.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from("relays")
+        .delete()
+        .eq("id", relay.id)
+        .eq("project_id", project.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setRelays(prevRelays => prevRelays.filter(r => r.id !== relay.id));
+      
+      Alert.alert("Success", `Relay "${relay.relay_name}" has been deleted.`);
+    } catch (error) {
+      console.error('Error deleting relay:', error);
+      Alert.alert("Error", "Failed to delete relay. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -236,6 +349,14 @@ export default function SettingsScreen() {
           type: "info"
         },
         {
+          id: "delete-relay",
+          title: "Delete Relay",
+          subtitle: `Delete a relay (${relays.length} available)`,
+          icon: "delete-outline",
+          type: "button",
+          onPress: handleDeleteRelay
+        },
+        {
           id: "about",
           title: "About",
           subtitle: "Relay Control App",
@@ -311,12 +432,12 @@ export default function SettingsScreen() {
             onPress={item.onPress}
             activeOpacity={0.7}
             style={{
-              backgroundColor: item.id === 'delete-project' ? '#fee2e2' : (isDarkMode ? '#374151' : '#f3f4f6'),
+              backgroundColor: item.id === 'delete-project' || item.id === 'delete-relay' ? '#fee2e2' : (isDarkMode ? '#374151' : '#f3f4f6'),
               borderRadius: 8,
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderWidth: 1,
-              borderColor: item.id === 'delete-project' ? '#fecaca' : colors.border,
+              borderColor: item.id === 'delete-project' || item.id === 'delete-relay' ? '#fecaca' : colors.border,
               minWidth: 70,
               minHeight: 32,
               alignItems: 'center',
@@ -326,9 +447,12 @@ export default function SettingsScreen() {
             <Text style={{
               fontSize: 12,
               fontWeight: '600',
-              color: item.id === 'delete-project' ? '#ef4444' : colors.textSecondary,
+              color: item.id === 'delete-project' || item.id === 'delete-relay' ? '#ef4444' : colors.textSecondary,
             }}>
-              {item.id === 'delete-project' ? 'Delete' : item.id === 'manual-connect' ? 'Connect' : item.id === 'rename-project' ? 'Rename' : 'Action'}
+              {item.id === 'delete-project' ? 'Delete' : 
+               item.id === 'delete-relay' ? 'Delete' :
+               item.id === 'manual-connect' ? 'Connect' : 
+               item.id === 'rename-project' ? 'Rename' : 'Action'}
             </Text>
           </TouchableOpacity>
         )}
