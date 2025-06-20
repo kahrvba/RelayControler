@@ -42,7 +42,7 @@ export default function App() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, colors } = useTheme();
   const { t } = useLanguage();
-  const { connectionStatus, autoConnect } = useConnection();
+  const { connectionStatus } = useConnection();
   const { project, loading: projectLoading, updateProject, refreshProject } = useProject();
   const insets = useSafeAreaInsets();
   const [inputProject, setInputProject] = React.useState("");

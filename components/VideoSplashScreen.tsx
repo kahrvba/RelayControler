@@ -1,6 +1,6 @@
 import { ResizeMode, Video } from 'expo-av';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -11,7 +11,18 @@ interface VideoSplashScreenProps {
 
 export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoComplete }) => {
   const videoRef = useRef<Video>(null);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  const handleVideoComplete = React.useCallback(async () => {
+    console.log('Video splash screen complete - transitioning to main app');
+    try {
+      // Hide the splash screen and notify parent component
+      await SplashScreen.hideAsync();
+      onVideoComplete();
+    } catch (error) {
+      console.error('Error hiding splash screen:', error);
+      onVideoComplete();
+    }
+  }, [onVideoComplete]);
 
   useEffect(() => {
     // Keep the splash screen visible while we're showing the video
@@ -24,23 +35,10 @@ export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoCom
     }, 5000); // 5 seconds fallback
 
     return () => clearTimeout(fallbackTimer);
-  }, []);
-
-  const handleVideoComplete = async () => {
-    console.log('Video splash screen complete - transitioning to main app');
-    try {
-      // Hide the splash screen and notify parent component
-      await SplashScreen.hideAsync();
-      onVideoComplete();
-    } catch (error) {
-      console.error('Error hiding splash screen:', error);
-      onVideoComplete();
-    }
-  };
+  }, [handleVideoComplete]);
 
   const handleVideoLoad = () => {
     console.log('Video loaded successfully');
-    setIsVideoLoaded(true);
   };
 
   const handleVideoError = async (error: any) => {

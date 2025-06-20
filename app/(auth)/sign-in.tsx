@@ -31,7 +31,7 @@ export default function Page() {
   const onGoogleSignInPress = React.useCallback(async () => {
     setError('')
     try {
-      const { createdSessionId, signIn, signUp, setActive } = await startOAuthFlow()
+      const { createdSessionId, setActive } = await startOAuthFlow()
 
       if (createdSessionId) {
         if (setActive) {
@@ -45,7 +45,7 @@ export default function Page() {
       console.error('OAuth error', err)
       setError(err.errors[0]?.message || t('auth.signInError'))
     }
-  }, [])
+  }, [router, startOAuthFlow, t])
 
   const onPhoneSignInPress = async () => {
     if (!isLoaded || loading) return

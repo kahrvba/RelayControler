@@ -34,13 +34,12 @@ interface SettingsItem {
 }
 
 export default function SettingsScreen() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { t } = useLanguage();
   const { connectionStatus, autoConnect, setAutoConnect, manualConnect } = useConnection();
-  const { project, loading: projectLoading, refreshProject, updateProjectName } = useProject();
+  const { project, refreshProject, updateProjectName } = useProject();
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
@@ -71,7 +70,7 @@ export default function SettingsScreen() {
     try {
       await manualConnect();
       Alert.alert(t('alerts.success'), t('connection.connectionSuccess'));
-    } catch (error) {
+    } catch {
       Alert.alert(t('connection.connectionError'), t('connection.checkInternetConnection'));
     }
   };
@@ -177,8 +176,6 @@ export default function SettingsScreen() {
     }
 
     try {
-      setLoading(true);
-      
       // Delete from database
       const { error } = await supabase
         .from("relays")
@@ -204,8 +201,6 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error('Error deleting relay:', error);
       Alert.alert(t('alerts.error'), t('alerts.tryAgain'));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -623,10 +618,64 @@ export default function SettingsScreen() {
         </Modal>
 
         {/* Language Selector Modal */}
-        <LanguageSelector 
+        <Modal
           visible={showLanguageSelector}
-          onClose={() => setShowLanguageSelector(false)}
-        />
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowLanguageSelector(false)}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 40,
+          }}>
+            <View style={{
+              backgroundColor: colors.surface,
+              borderRadius: 20,
+              padding: 24,
+              width: '100%',
+              maxWidth: 320,
+              shadowColor: colors.shadow,
+              shadowOpacity: isDarkMode ? 0.3 : 0.2,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 10,
+            }}>
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: colors.text,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                {t('settings.selectLanguage')}
+              </Text>
+              
+              <LanguageSelector />
+              
+              <TouchableOpacity
+                onPress={() => setShowLanguageSelector(false)}
+                style={{
+                  backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  marginTop: 20,
+                }}
+              >
+                <Text style={{
+                  color: colors.text,
+                  fontSize: 16,
+                  fontWeight: '600',
+                }}>
+                  {t('common.close')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </View>
   );

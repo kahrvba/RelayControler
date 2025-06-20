@@ -22,7 +22,7 @@ export default function SignUpScreen() {
   const onGoogleSignUpPress = React.useCallback(async () => {
     setError('')
     try {
-      const { createdSessionId, signUp, setActive } = await startOAuthFlow()
+      const { createdSessionId, setActive } = await startOAuthFlow()
 
       if (createdSessionId) {
         if (setActive) {
@@ -36,7 +36,7 @@ export default function SignUpScreen() {
       console.error('OAuth error', err)
       setError(err.errors[0]?.message || 'An error occurred.')
     }
-  }, [])
+  }, [router, startOAuthFlow])
 
   const onPhoneSignUpPress = async () => {
     if (!isLoaded || loading) return

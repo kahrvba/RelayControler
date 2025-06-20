@@ -38,7 +38,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
   const [project, setProject] = React.useState<Project | null>(null);
   const [loading, setLoading] = React.useState(false);
 
-  const fetchProject = async () => {
+  const fetchProject = React.useCallback(async () => {
     if (!isUserLoaded || !userId) return;
     
     setLoading(true);
@@ -55,7 +55,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [isUserLoaded, userId]);
 
   const refreshProject = async () => {
     await fetchProject();
@@ -74,7 +74,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
   // Fetch project when user is loaded
   React.useEffect(() => {
     fetchProject();
-  }, [isUserLoaded, userId]);
+  }, [isUserLoaded, userId, fetchProject]);
 
   const value: ProjectContextType = {
     project,

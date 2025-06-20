@@ -44,7 +44,7 @@ export const ConnectionProvider: React.FC<ConnectionProviderProps> = ({
     if (autoConnect && isUserLoaded && userId) {
       handleAutoConnect();
     }
-  }, [autoConnect, isUserLoaded, userId]);
+  }, [autoConnect, isUserLoaded, userId, handleAutoConnect]);
 
   const loadAutoConnectPreference = async () => {
     try {
@@ -76,14 +76,14 @@ export const ConnectionProvider: React.FC<ConnectionProviderProps> = ({
     }
   };
 
-  const handleAutoConnect = async () => {
+  const handleAutoConnect = React.useCallback(async () => {
     if (!isUserLoaded || !userId) return;
     
     setConnectionStatus('connecting');
     
     try {
       // Test connection by attempting to fetch user's project data
-      const { data: projectData, error } = await supabase
+      const { error } = await supabase
         .from("projects")
         .select("id, project_name")
         .eq("user_id", userId)
@@ -100,7 +100,7 @@ export const ConnectionProvider: React.FC<ConnectionProviderProps> = ({
       console.error('Auto-connect error:', error);
       setConnectionStatus('disconnected');
     }
-  };
+  }, [isUserLoaded, userId]);
 
   const manualConnect = async () => {
     if (!isUserLoaded || !userId) {
@@ -111,7 +111,7 @@ export const ConnectionProvider: React.FC<ConnectionProviderProps> = ({
     
     try {
       // Test connection by attempting to fetch user's project data
-      const { data: projectData, error } = await supabase
+      const { error } = await supabase
         .from("projects")
         .select("id, project_name")
         .eq("user_id", userId)
