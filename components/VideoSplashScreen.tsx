@@ -11,9 +11,7 @@ interface VideoSplashScreenProps {
 
 export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoComplete }) => {
   const videoRef = useRef<Video>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
-  const [videoDuration, setVideoDuration] = useState(0);
 
   const handleVideoComplete = React.useCallback(async () => {
     if (videoCompleted) return; // Prevent multiple calls
@@ -45,9 +43,7 @@ export const VideoSplashScreen: React.FC<VideoSplashScreenProps> = ({ onVideoCom
 
   const handleVideoLoad = (data: any) => {
     console.log('Video loaded successfully', data);
-    setVideoLoaded(true);
     if (data.durationMillis) {
-      setVideoDuration(data.durationMillis / 1000);
       console.log('Video duration:', data.durationMillis / 1000, 'seconds');
     }
   };
