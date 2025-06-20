@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native'
 import { useLanguage } from "../../components/LanguageProvider"
+import { LanguageSelector } from "../../components/LanguageSelector"
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -98,6 +99,7 @@ export default function Page() {
           source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
           style={styles.logo}
         />
+        <LanguageSelector />
         <Text style={styles.title}>{t('auth.signInToAlemdar')}</Text>
         <Text style={styles.subtitle}>
           {t('auth.welcomeBack')}

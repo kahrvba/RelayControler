@@ -5,6 +5,7 @@ import * as React from 'react'
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLanguage } from "../../components/LanguageProvider"
+import { LanguageSelector } from "../../components/LanguageSelector"
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -88,6 +89,7 @@ export default function SignUpScreen() {
           source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
           style={styles.logo}
         />
+        <LanguageSelector />
         <Text style={styles.title}>{t('auth.createAccount')}</Text>
         <Text style={styles.subtitle}>
           {t('auth.welcome')}
