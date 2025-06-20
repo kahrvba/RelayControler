@@ -12,6 +12,8 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useConnection } from "../../components/ConnectionProvider";
+import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
 
 const { width } = Dimensions.get('window');
@@ -32,12 +34,40 @@ type RelayOrAddItem = Relay | AddRelayItem;
 
 export default function App() {
   const { user, isLoaded } = useUser();
+  const { isDarkMode, colors } = useTheme();
+  const { connectionStatus, autoConnect } = useConnection();
   const [project, setProject] = React.useState<{ id: number; project_name: string } | null>(null);
   const [inputProject, setInputProject] = React.useState("");
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [adding, setAdding] = React.useState(false);
   const [updating, setUpdating] = React.useState<number | null>(null);
+
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'Connected';
+      case 'connecting':
+        return 'Connecting...';
+      case 'disconnected':
+        return 'Disconnected';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return colors.accent;
+      case 'connecting':
+        return '#f59e0b'; // amber
+      case 'disconnected':
+        return '#ef4444'; // red
+      default:
+        return colors.textSecondary;
+    }
+  };
 
   React.useEffect(() => {
     if (!isLoaded || !user) return;
@@ -214,25 +244,25 @@ export default function App() {
       onPress={() => toggleRelay(item)}
       disabled={updating === item.id}
       style={{
-        backgroundColor: item.state === 1 ? '#a5f3fc' : '#f3f4f6',
+        backgroundColor: item.state === 1 ? (isDarkMode ? '#0e7490' : '#a5f3fc') : (isDarkMode ? '#374151' : '#f3f4f6'),
         borderRadius: 24,
         padding: 20,
         marginBottom: 16,
         width: (width - 72) / 2,
         alignSelf: 'center',
-        shadowColor: '#94a3b8',
-        shadowOpacity: 0.15,
+        shadowColor: colors.shadow,
+        shadowOpacity: isDarkMode ? 0.3 : 0.15,
         shadowRadius: 10,
         elevation: 6,
         borderWidth: 1.25,
-        borderColor: item.state === 1 ? '#06b6d4' : '#d1d5db',
+        borderColor: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.border,
         opacity: updating === item.id ? 0.7 : 1
       }}
     >
       <Text style={{
         fontSize: 18,
         fontWeight: '700',
-        color: item.state === 1 ? '#0e7490' : '#374151',
+        color: item.state === 1 ? (isDarkMode ? '#e0f2fe' : '#0e7490') : colors.text,
         marginBottom: 8,
         textAlign: 'center'
       }}>
@@ -242,7 +272,7 @@ export default function App() {
       <Text style={{
         fontSize: 14,
         fontWeight: '600',
-        color: item.state === 1 ? '#0e7490' : '#6b7280',
+        color: item.state === 1 ? (isDarkMode ? '#e0f2fe' : '#0e7490') : colors.textSecondary,
         textAlign: 'center',
         opacity: 0.85
       }}>
@@ -252,7 +282,7 @@ export default function App() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{
           flexDirection: 'row',
@@ -260,32 +290,37 @@ export default function App() {
           justifyContent: 'space-between',
           paddingHorizontal: 24,
           paddingVertical: 16,
-          backgroundColor: '#ffffff',
-          shadowColor: '#000',
-          shadowOpacity: 0.06,
+          backgroundColor: colors.surface,
+          shadowColor: colors.shadow,
+          shadowOpacity: isDarkMode ? 0.3 : 0.06,
           shadowRadius: 8,
           shadowOffset: { width: 0, height: 2 },
           elevation: 3,
           borderBottomWidth: 1,
-          borderBottomColor: '#f3f4f6',
+          borderBottomColor: colors.border,
         }}>
-          <Text style={{ fontSize: 24, fontWeight: '700', color: '#1f2937', letterSpacing: -0.5 }}>
+          <Text style={{ 
+            fontSize: 24, 
+            fontWeight: '700', 
+            color: colors.text,
+            letterSpacing: -0.5
+          }}>
             {project ? project.project_name : "Your Project"}
           </Text>
-
+          
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{
               width: 10,
               height: 10,
               borderRadius: 5,
-              backgroundColor: '#10b981',
-              shadowColor: '#10b981',
+              backgroundColor: getConnectionStatusColor(),
+              shadowColor: getConnectionStatusColor(),
               shadowOpacity: 0.6,
               shadowRadius: 6,
               shadowOffset: { width: 0, height: 0 },
             }} />
-            <Text style={{ fontSize: 14, fontWeight: '500', color: '#6b7280', letterSpacing: 0.25 }}>
-              Connected
+            <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, letterSpacing: 0.25 }}>
+              {getConnectionStatusText()}
             </Text>
           </View>
         </View>
@@ -293,7 +328,7 @@ export default function App() {
         <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
           {!isLoaded || loading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <ActivityIndicator size="large" color="#3b82f6" />
+              <ActivityIndicator size="large" color={colors.primary} />
             </View>
           ) : project ? (
             <>
@@ -310,17 +345,17 @@ export default function App() {
                         onPress={addRelay}
                         disabled={adding}
                         style={{
-                          backgroundColor: '#f8fafc',
+                          backgroundColor: isDarkMode ? '#374151' : '#f8fafc',
                           borderRadius: 24,
                           padding: 20,
                           marginBottom: 16,
                           width: (width - 72) / 2,
-                          shadowColor: '#94a3b8',
-                          shadowOpacity: 0.15,
+                          shadowColor: colors.shadow,
+                          shadowOpacity: isDarkMode ? 0.3 : 0.15,
                           shadowRadius: 10,
                           elevation: 6,
                           borderWidth: 1.25,
-                          borderColor: '#d1d5db',
+                          borderColor: colors.border,
                           borderStyle: 'dashed',
                           opacity: adding ? 0.7 : 1,
                           alignItems: 'center',
@@ -331,12 +366,12 @@ export default function App() {
                         <MaterialCommunityIcons 
                           name="plus" 
                           size={32} 
-                          color="#94a3b8" 
+                          color={colors.textSecondary} 
                         />
                         <Text style={{
                           fontSize: 14,
                           fontWeight: '600',
-                          color: '#94a3b8',
+                          color: colors.textSecondary,
                           marginTop: 8,
                           textAlign: 'center'
                         }}>
@@ -352,49 +387,69 @@ export default function App() {
             </>
           ) : (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }}>
-              <Text style={{ fontSize: 28, fontWeight: '700', color: '#1f2937', marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 }}>
+              <Text style={{ 
+                fontSize: 28, 
+                fontWeight: '700', 
+                color: colors.text, 
+                marginBottom: 8,
+                textAlign: 'center',
+                letterSpacing: -0.5
+              }}>
                 Welcome
               </Text>
-              <Text style={{ fontSize: 16, color: '#6b7280', marginBottom: 32, textAlign: 'center', lineHeight: 24 }}>
+              <Text style={{ 
+                fontSize: 16, 
+                color: colors.textSecondary, 
+                marginBottom: 32,
+                textAlign: 'center',
+                lineHeight: 24
+              }}>
                 Create your first project to get started
               </Text>
+              
               <TextInput
                 placeholder="Enter project name"
                 value={inputProject}
                 onChangeText={setInputProject}
-                style={{
-                  backgroundColor: '#f9fafb',
-                  borderRadius: 16,
-                  padding: 20,
-                  width: '100%',
-                  fontSize: 16,
-                  marginBottom: 24,
-                  borderWidth: 2,
-                  borderColor: '#e5e7eb',
-                  color: '#1f2937',
+                style={{ 
+                  backgroundColor: isDarkMode ? '#374151' : '#f9fafb', 
+                  borderRadius: 16, 
+                  padding: 20, 
+                  width: '100%', 
+                  fontSize: 16, 
+                  marginBottom: 24, 
+                  borderWidth: 2, 
+                  borderColor: colors.border,
+                  color: colors.text,
                   fontWeight: '500'
                 }}
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.textSecondary}
               />
+              
               <TouchableOpacity
                 onPress={createProject}
                 disabled={!inputProject.trim()}
-                style={{
-                  backgroundColor: '#3b82f6',
-                  borderRadius: 16,
-                  paddingVertical: 18,
-                  paddingHorizontal: 32,
-                  width: '100%',
+                style={{ 
+                  backgroundColor: colors.primary, 
+                  borderRadius: 16, 
+                  paddingVertical: 18, 
+                  paddingHorizontal: 32, 
+                  width: '100%', 
                   alignItems: 'center',
-                  shadowColor: '#3b82f6',
+                  shadowColor: colors.primary,
                   shadowOpacity: 0.2,
                   shadowRadius: 8,
                   shadowOffset: { width: 0, height: 4 },
                   elevation: 4,
-                  opacity: !inputProject.trim() ? 0.6 : 1
+                  opacity: !inputProject.trim() ? 0.6 : 1 
                 }}
               >
-                <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16, letterSpacing: 0.25 }}>
+                <Text style={{ 
+                  color: '#ffffff', 
+                  fontWeight: '600', 
+                  fontSize: 16,
+                  letterSpacing: 0.25
+                }}>
                   Create Project
                 </Text>
               </TouchableOpacity>
