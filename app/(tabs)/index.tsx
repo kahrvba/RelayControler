@@ -37,12 +37,13 @@ export default function App() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, colors } = useTheme();
   const { connectionStatus, autoConnect } = useConnection();
-  const { project, loading: projectLoading, updateProject } = useProject();
+  const { project, loading: projectLoading, updateProject, refreshProject } = useProject();
   const [inputProject, setInputProject] = React.useState("");
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [isAddingRelay, setIsAddingRelay] = React.useState(false);
   const [updating, setUpdating] = React.useState<number | null>(null);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
@@ -227,6 +228,28 @@ export default function App() {
     }
   };
 
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Refresh project data
+      await refreshProject();
+      
+      // Refresh relays data
+      if (project) {
+        const { data } = await supabase
+          .from("relays")
+          .select("id, relay_name, state")
+          .eq("project_id", project.id)
+          .order("relay_name");
+        setRelays(data || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [project, refreshProject]);
+
   const renderRelayCard = ({ item }: { item: Relay }) => (
     <TouchableOpacity
       onPress={() => toggleRelay(item)}
@@ -326,6 +349,8 @@ export default function App() {
                 numColumns={2}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 contentContainerStyle={{ paddingBottom: 120 }}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
                 renderItem={({ item }) => {
                   if (item.id === 'add-relay') {
                     return (
