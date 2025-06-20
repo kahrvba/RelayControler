@@ -458,7 +458,7 @@ export default function App() {
           flex: 1, 
           paddingHorizontal: 24, 
           paddingTop: 24,
-          paddingBottom: 72 + insets.bottom + 20, // Account for tab bar height
+          paddingBottom: 92 + insets.bottom, // Account for tab bar height + extra space
         }}>
           {!isLoaded || loading || projectLoading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

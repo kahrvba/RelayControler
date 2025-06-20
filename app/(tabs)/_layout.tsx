@@ -5,9 +5,11 @@ import { SignedIn, SignedOut } from '@clerk/clerk-expo';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { isDarkMode, colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <>
@@ -20,8 +22,8 @@ export default function TabLayout() {
             tabBarButton: HapticTab,
             tabBarStyle: {
               position: 'absolute',
-              height: 72,
-              paddingBottom: Platform.OS === 'ios' ? 10 : 6,
+              height: 72 + insets.bottom,
+              paddingBottom: Platform.OS === 'ios' ? 10 : insets.bottom,
               paddingTop: 4,
               backgroundColor: colors.surface,
               borderTopWidth: 0,

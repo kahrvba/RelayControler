@@ -3,7 +3,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from "react";
 import { Alert, Platform, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
 import { useProject } from "../../components/ProjectProvider";
 import { useTheme } from "../../components/ThemeProvider";
@@ -30,6 +30,7 @@ export default function SettingsScreen() {
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
   const { connectionStatus, autoConnect, setAutoConnect, manualConnect } = useConnection();
   const { project, loading: projectLoading, refreshProject, updateProjectName } = useProject();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 
@@ -382,6 +383,7 @@ export default function SettingsScreen() {
 
         <ScrollView 
           style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}
+          contentContainerStyle={{ paddingBottom: 92 + insets.bottom }}
           showsVerticalScrollIndicator={false}
         >
           {settingsSections.map((section) => (
