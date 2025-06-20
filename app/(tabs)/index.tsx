@@ -116,14 +116,54 @@ export default function App() {
   const addRelay = async () => {
     if (!project) return;
     setAdding(true);
-    const nextIndex = relays.length;
-    const relayName = `p${nextIndex}`;
-    await supabase.from("relays").insert({
-      project_id: project.id,
-      relay_name: relayName,
-      state: 0,
-    });
-    setAdding(false);
+    
+    try {
+      // Query the current MAX(id) from relays table for this project
+      const { data: maxIdResult, error: maxIdError } = await supabase
+        .from("relays")
+        .select("id")
+        .eq("project_id", project.id)
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (maxIdError && maxIdError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error querying max ID:', maxIdError);
+        throw maxIdError;
+      }
+
+      // Calculate new ID: max + 1, or 1 if table is empty
+      const newId = maxIdResult ? maxIdResult.id + 1 : 1;
+      
+      // Calculate relay name based on current count
+      const nextIndex = relays.length;
+      const relayName = `p${nextIndex}`;
+
+      // Explicitly insert with calculated ID
+      const { data: newRelay, error: insertError } = await supabase
+        .from("relays")
+        .insert({
+          id: newId,
+          project_id: project.id,
+          relay_name: relayName,
+          state: 0,
+        })
+        .select("id, relay_name, state")
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting new relay:', insertError);
+        throw insertError;
+      }
+
+      // Add to local state
+      setRelays(prevRelays => [...prevRelays, newRelay]);
+      
+    } catch (error) {
+      console.error('Error adding relay:', error);
+    } finally {
+      setAdding(false);
+    }
   };
 
   // Send broadcast for relay state update
