@@ -1,66 +1,271 @@
-import { useSignIn } from '@clerk/clerk-expo'
+import { useOAuth, useSignIn } from '@clerk/clerk-expo'
+import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
 import React from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn()
   const router = useRouter()
 
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
+  const [phone, setPhone] = React.useState('')
+  const [code, setCode] = React.useState('')
+  const [verifying, setVerifying] = React.useState(false)
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState('')
 
-  // Handle the submission of the sign-in form
-  const onSignInPress = async () => {
-    if (!isLoaded) return
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
 
-    // Start the sign-in process using the email and password provided
+  const onGoogleSignInPress = React.useCallback(async () => {
+    setError('')
+    try {
+      const { createdSessionId, signIn, signUp, setActive } = await startOAuthFlow()
+
+      if (createdSessionId) {
+        if (setActive) {
+          setActive({ session: createdSessionId })
+          router.replace('/')
+        }
+      } else {
+        // Use signIn or signUp for next steps such as MFA
+      }
+    } catch (err: any) {
+      console.error('OAuth error', err)
+      setError(err.errors[0]?.message || 'An error occurred.')
+    }
+  }, [])
+
+  const onPhoneSignInPress = async () => {
+    if (!isLoaded || loading) return
+    setLoading(true)
+    setError('')
     try {
       const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
+        identifier: phone,
       })
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === 'complete') {
-        await setActive({ session: signInAttempt.createdSessionId })
-        router.replace('/')
-      } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2))
+      if (signInAttempt.status === 'needs_first_factor') {
+        setVerifying(true)
       }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2))
+      setError(err.errors[0]?.message || 'An error occurred.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onVerifyCodePress = async () => {
+    if (!isLoaded || loading) return
+    setLoading(true)
+    setError('')
+    try {
+      const signInAttempt = await signIn.attemptFirstFactor({
+        strategy: 'phone_code',
+        code,
+      })
+
+      if (signInAttempt.status === 'complete') {
+        if (setActive) {
+          await setActive({ session: signInAttempt.createdSessionId })
+          router.replace('/')
+        }
+      }
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2))
+      setError(err.errors[0]?.message || 'An error occurred.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <View>
-      <Text>Sign in</Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-      />
-      <TextInput
-        value={password}
-        placeholder="Enter password"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
-      />
-      <TouchableOpacity onPress={onSignInPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style={{ display: 'flex', flexDirection: 'row', gap: 3 }}>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        <Image
+          source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>Sign in to Alemdar Controler</Text>
+        <Text style={styles.subtitle}>
+          Welcome back! Please sign in to continue
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.socialButton, { marginBottom: 24 }]}
+          onPress={onGoogleSignInPress}>
+          <FontAwesome name="google" size={24} color="black" />
+          <Text style={styles.socialButtonText}>Sign in with Google</Text>
+        </TouchableOpacity>
+
+        <View style={styles.separatorContainer}>
+          <View style={styles.separatorLine} />
+          <Text style={styles.separatorText}>or</Text>
+          <View style={styles.separatorLine} />
+        </View>
+
+        {!verifying && (
+          <>
+            <Text style={styles.label}>Phone number</Text>
+            <TextInput
+              value={phone}
+              placeholder="+1234567890"
+              style={styles.input}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity
+              onPress={onPhoneSignInPress}
+              style={styles.button}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.buttonText}>Send Code</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {verifying && (
+          <>
+            <Text style={styles.label}>Verification Code</Text>
+            <TextInput
+              value={code}
+              placeholder="123456"
+              style={styles.input}
+              onChangeText={setCode}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity
+              onPress={onVerifyCodePress}
+              style={styles.button}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.buttonText}>Verify Code</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+      <View style={styles.footer}>
+        <Text>Don&apos;t have an account?</Text>
         <Link href="/sign-up">
-          <Text>Sign up</Text>
+          <Text style={styles.link}>Sign up</Text>
         </Link>
       </View>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginBottom: 24,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+  },
+  socialButtonText: {
+    marginLeft: 12,
+    fontWeight: 'bold',
+  },
+  separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 24,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  separatorText: {
+    marginHorizontal: 8,
+    color: '#6b7280',
+  },
+  label: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  input: {
+    width: '100%',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  button: {
+    width: '100%',
+    backgroundColor: '#2d3748',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 32,
+  },
+  link: {
+    color: '#2d3748',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+})

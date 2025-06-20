@@ -13,9 +13,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/splash-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.alemdarcontroler.app",
       "edgeToEdgeEnabled": true
     },
     "web": {
