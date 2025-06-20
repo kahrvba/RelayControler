@@ -1,4 +1,5 @@
 import { HapticTab } from '@/components/HapticTab';
+import { useLanguage } from '@/components/LanguageProvider';
 import { useTheme } from '@/components/ThemeProvider';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { SignedIn, SignedOut } from '@clerk/clerk-expo';
@@ -9,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { isDarkMode, colors } = useTheme();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
   return (
@@ -38,14 +40,14 @@ export default function TabLayout() {
           <Tabs.Screen
             name="index"
             options={{
-              title: 'Home',
+              title: t('navigation.home'),
               tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
             }}
           />
           <Tabs.Screen
             name="settings"
             options={{
-              title: 'Settings',
+              title: t('navigation.settings'),
               tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
             }}
           />

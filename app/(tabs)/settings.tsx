@@ -5,6 +5,8 @@ import React from "react";
 import { Alert, Modal, Platform, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
+import { useLanguage } from "../../components/LanguageProvider";
+import { LanguageSelector } from "../../components/LanguageSelector";
 import { useProject } from "../../components/ProjectProvider";
 import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
@@ -34,6 +36,7 @@ interface SettingsItem {
 export default function SettingsScreen() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
+  const { t } = useLanguage();
   const { connectionStatus, autoConnect, setAutoConnect, manualConnect } = useConnection();
   const { project, loading: projectLoading, refreshProject, updateProjectName } = useProject();
   const insets = useSafeAreaInsets();
@@ -41,6 +44,7 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [relays, setRelays] = React.useState<Relay[]>([]);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = React.useState(false);
 
   // Fetch relays when project changes
   React.useEffect(() => {
@@ -66,22 +70,22 @@ export default function SettingsScreen() {
   const handleManualConnect = async () => {
     try {
       await manualConnect();
-      Alert.alert("Success", "Successfully connected to Supabase!");
+      Alert.alert(t('alerts.success'), t('connection.connectionSuccess'));
     } catch (error) {
-      Alert.alert("Connection Error", "Failed to connect. Please check your internet connection and try again.");
+      Alert.alert(t('connection.connectionError'), t('connection.checkInternetConnection'));
     }
   };
 
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
       case 'connected':
-        return 'Connected';
+        return t('connection.connected');
       case 'connecting':
-        return 'Connecting...';
+        return t('connection.connecting');
       case 'disconnected':
-        return 'Disconnected';
+        return t('connection.disconnected');
       default:
-        return 'Unknown';
+        return t('common.unknown');
     }
   };
 
@@ -101,12 +105,12 @@ export default function SettingsScreen() {
   const handleRenameProject = () => {
     if (Platform.OS === 'ios') {
       Alert.prompt(
-        "Rename Project",
-        "Enter new project name:",
+        t('settings.renameProject'),
+        t('settings.enterNewProjectName'),
         [
-          { text: "Cancel", style: "cancel" },
+          { text: t('common.cancel'), style: "cancel" },
           { 
-            text: "Rename",
+            text: t('common.save'),
             onPress: async (newName) => {
               if (!project || !newName?.trim()) return;
               
@@ -135,16 +139,16 @@ export default function SettingsScreen() {
     } else {
       // Fallback for Android and other platforms
       Alert.alert(
-        "Rename Project",
-        "Rename functionality requires iOS. Please use the web interface to rename your project.",
-        [{ text: "OK" }]
+        t('settings.renameRequiresIOS'),
+        t('settings.renameRequiresIOSMessage'),
+        [{ text: t('common.ok') }]
       );
     }
   };
 
   const handleDeleteRelay = () => {
     if (!relays.length) {
-      Alert.alert("No Relays", "There are no relays to delete.");
+      Alert.alert(t('alerts.error'), t('home.noRelaysToDelete'));
       return;
     }
 
@@ -153,12 +157,12 @@ export default function SettingsScreen() {
 
   const confirmDeleteRelay = (relay: Relay) => {
     Alert.alert(
-      "Confirm Delete",
-      `Are you sure you want to delete "${relay.relay_name}"? This action cannot be undone.`,
+      t('home.confirmDeleteRelay'),
+      t('home.deleteRelayMessage', { name: relay.relay_name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         { 
-          text: "Delete", 
+          text: t('common.delete'), 
           style: "destructive",
           onPress: () => deleteRelay(relay)
         }
@@ -168,7 +172,7 @@ export default function SettingsScreen() {
 
   const deleteRelay = async (relay: Relay) => {
     if (!project) {
-      Alert.alert("Error", "No project found.");
+      Alert.alert(t('alerts.error'), t('alerts.noProjectFound'));
       return;
     }
 
@@ -196,10 +200,10 @@ export default function SettingsScreen() {
       // Update local state
       setRelays(prevRelays => prevRelays.filter(r => r.id !== relay.id));
       
-      Alert.alert("Success", `Relay "${relay.relay_name}" has been deleted.`);
+      Alert.alert(t('alerts.success'), t('home.relayDeleted'));
     } catch (error) {
       console.error('Error deleting relay:', error);
-      Alert.alert("Error", "Failed to delete relay. Please try again.");
+      Alert.alert(t('alerts.error'), t('alerts.tryAgain'));
     } finally {
       setLoading(false);
     }
@@ -211,21 +215,21 @@ export default function SettingsScreen() {
         type: 'email',
         value: user.primaryEmailAddress.emailAddress,
         icon: 'email-outline',
-        title: 'Email'
+        title: t('settings.email')
       };
     } else if (user?.primaryPhoneNumber?.phoneNumber) {
       return {
         type: 'phone',
         value: user.primaryPhoneNumber.phoneNumber,
         icon: 'phone-outline',
-        title: 'Phone'
+        title: t('settings.phone')
       };
     } else {
       return {
         type: 'unknown',
-        value: 'Not available',
+        value: t('common.unknown'),
         icon: 'account-outline',
-        title: 'Sign-up Method'
+        title: t('settings.signUpMethod')
       };
     }
   };
@@ -234,7 +238,7 @@ export default function SettingsScreen() {
 
   const settingsSections: SettingsSection[] = [
     {
-      title: "Account",
+      title: t('settings.account'),
       items: [
         {
           id: "signup-method",
@@ -246,19 +250,19 @@ export default function SettingsScreen() {
       ]
     },
     {
-      title: "Project",
+      title: t('settings.project'),
       items: [
         {
           id: "project-name",
-          title: "Project Name",
-          subtitle: project?.project_name || "No project",
+          title: t('settings.projectName'),
+          subtitle: project?.project_name || t('alerts.noProjectFound'),
           icon: "folder-outline",
           type: "info"
         },
         {
           id: "rename-project",
-          title: "Rename Project",
-          subtitle: "Change project name",
+          title: t('settings.renameProject'),
+          subtitle: t('settings.renameProject'),
           icon: "pencil-outline",
           type: "button",
           onPress: handleRenameProject
@@ -266,19 +270,19 @@ export default function SettingsScreen() {
       ]
     },
     {
-      title: "Connection",
+      title: t('settings.connection'),
       items: [
         {
           id: "connection-status",
-          title: "Connection Status",
+          title: t('settings.connectionStatus'),
           subtitle: getConnectionStatusText(),
           icon: "wifi",
           type: "info"
         },
         {
           id: "auto-connect",
-          title: "Auto Connect",
-          subtitle: "Automatically connect on app start",
+          title: t('settings.autoConnect'),
+          subtitle: t('settings.autoConnect'),
           icon: "power-plug-outline",
           type: "toggle",
           value: autoConnect,
@@ -286,8 +290,8 @@ export default function SettingsScreen() {
         },
         {
           id: "manual-connect",
-          title: "Manual Connect",
-          subtitle: "Connect to Supabase now",
+          title: t('settings.manualConnect'),
+          subtitle: t('settings.manualConnect'),
           icon: "wifi-refresh",
           type: "button",
           onPress: handleManualConnect
@@ -295,12 +299,12 @@ export default function SettingsScreen() {
       ]
     },
     {
-      title: "Notifications",
+      title: t('settings.notifications'),
       items: [
         {
           id: "notifications",
-          title: "Push Notifications",
-          subtitle: "Get notified about relay changes",
+          title: t('settings.pushNotifications'),
+          subtitle: t('settings.pushNotifications'),
           icon: "bell-outline",
           type: "toggle",
           value: notificationsEnabled,
@@ -309,12 +313,25 @@ export default function SettingsScreen() {
       ]
     },
     {
-      title: "App",
+      title: t('settings.language'),
+      items: [
+        {
+          id: "language",
+          title: t('settings.selectLanguage'),
+          subtitle: t('settings.selectLanguage'),
+          icon: "translate",
+          type: "button",
+          onPress: () => setShowLanguageSelector(true)
+        }
+      ]
+    },
+    {
+      title: t('settings.app'),
       items: [
         {
           id: "dark-mode",
-          title: "Dark Mode",
-          subtitle: "Use dark theme",
+          title: t('settings.darkMode'),
+          subtitle: t('settings.useDarkTheme'),
           icon: "theme-light-dark",
           type: "toggle",
           value: isDarkMode,
@@ -322,26 +339,26 @@ export default function SettingsScreen() {
         },
         {
           id: "version",
-          title: "App Version",
+          title: t('settings.appVersion'),
           subtitle: "1.0.0",
           icon: "information-outline",
           type: "info"
         },
         {
           id: "delete-relay",
-          title: "Delete Relay",
-          subtitle: `Delete a relay (${relays.length} available)`,
+          title: t('settings.deleteRelay'),
+          subtitle: t('settings.deleteRelaySubtitle', { count: relays.length }),
           icon: "delete-outline",
           type: "button",
           onPress: handleDeleteRelay
         },
         {
           id: "about",
-          title: "About",
-          subtitle: "Relay Control App",
+          title: t('settings.about'),
+          subtitle: t('settings.aboutSubtitle'),
           icon: "help-circle-outline",
           type: "button",
-          onPress: () => Alert.alert("About", "Relay Control App\nVersion 1.0.0\n\nControl your devices with ease.")
+          onPress: () => Alert.alert(t('settings.about'), t('settings.aboutMessage'))
         }
       ]
     }
@@ -428,10 +445,11 @@ export default function SettingsScreen() {
               fontWeight: '600',
               color: item.id === 'delete-project' || item.id === 'delete-relay' ? '#ef4444' : colors.textSecondary,
             }}>
-              {item.id === 'delete-project' ? 'Delete' : 
-               item.id === 'delete-relay' ? 'Delete' :
-               item.id === 'manual-connect' ? 'Connect' : 
-               item.id === 'rename-project' ? 'Rename' : 'Action'}
+              {item.id === 'delete-project' ? t('common.delete') : 
+               item.id === 'delete-relay' ? t('common.delete') :
+               item.id === 'manual-connect' ? t('settings.manualConnect') : 
+               item.id === 'rename-project' ? t('common.save') : 
+               item.id === 'language' ? t('settings.selectLanguage') : t('common.ok')}
             </Text>
           </TouchableOpacity>
         )}
@@ -464,7 +482,7 @@ export default function SettingsScreen() {
             color: colors.text,
             letterSpacing: -0.5
           }}>
-            Settings
+            {t('settings.title')}
           </Text>
           
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -603,6 +621,12 @@ export default function SettingsScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Language Selector Modal */}
+        <LanguageSelector 
+          visible={showLanguageSelector}
+          onClose={() => setShowLanguageSelector(false)}
+        />
       </SafeAreaView>
     </View>
   );

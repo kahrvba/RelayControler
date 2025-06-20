@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnection } from "../../components/ConnectionProvider";
+import { useLanguage } from "../../components/LanguageProvider";
 import { useTheme } from "../../components/ThemeProvider";
 import { supabase } from "../../lib/supabase";
 
@@ -40,6 +41,7 @@ type RelayOrAddItem = Relay | AddRelayItem;
 export default function App() {
   const { user, isLoaded } = useUser();
   const { isDarkMode, colors } = useTheme();
+  const { t } = useLanguage();
   const { connectionStatus, autoConnect } = useConnection();
   const { project, loading: projectLoading, updateProject, refreshProject } = useProject();
   const insets = useSafeAreaInsets();
@@ -57,13 +59,13 @@ export default function App() {
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
       case 'connected':
-        return 'Connected';
+        return t('connection.connected');
       case 'connecting':
-        return 'Connecting...';
+        return t('connection.connecting');
       case 'disconnected':
-        return 'Disconnected';
+        return t('connection.disconnected');
       default:
-        return 'Unknown';
+        return t('common.unknown');
     }
   };
 
@@ -411,7 +413,7 @@ export default function App() {
         textAlign: 'center',
         opacity: 0.85
       }}>
-        {updating === item.id ? 'Updating...' : (item.state === 1 ? 'ON' : 'OFF')}
+        {updating === item.id ? t('common.loading') : (item.state === 1 ? t('home.relayStateOn') : t('home.relayStateOff'))}
       </Text>
     </TouchableOpacity>
   );
@@ -440,7 +442,7 @@ export default function App() {
             color: colors.text,
             letterSpacing: -0.5
           }}>
-            {project ? project.project_name : "Your Project"}
+            {project ? project.project_name : t('home.projectName')}
           </Text>
           
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -513,7 +515,7 @@ export default function App() {
                           marginTop: 8,
                           textAlign: 'center'
                         }}>
-                          Add Relay
+                          {t('home.addRelay')}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -533,7 +535,7 @@ export default function App() {
                 textAlign: 'center',
                 letterSpacing: -0.5
               }}>
-                Welcome
+                {t('home.welcome')}
               </Text>
               <Text style={{ 
                 fontSize: 16, 
@@ -542,11 +544,11 @@ export default function App() {
                 textAlign: 'center',
                 lineHeight: 24
               }}>
-                Create your first project to get started
+                {t('home.createFirstProject')}
               </Text>
               
               <TextInput
-                placeholder="Enter project name"
+                placeholder={t('home.enterProjectName')}
                 value={inputProject}
                 onChangeText={setInputProject}
                 style={{ 
@@ -588,7 +590,7 @@ export default function App() {
                   fontSize: 16,
                   letterSpacing: 0.25
                 }}>
-                  Create Project
+                  {t('home.createProject')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -632,7 +634,7 @@ export default function App() {
                   marginBottom: 8,
                   textAlign: 'center',
                 }}>
-                  {nameModalType === 'add' ? 'Add New Relay' : 'Rename Relay'}
+                  {nameModalType === 'add' ? t('home.addNewRelay') : t('home.renameRelay')}
                 </Text>
                 
                 <Text style={{
@@ -641,13 +643,13 @@ export default function App() {
                   marginBottom: 20,
                   textAlign: 'center',
                 }}>
-                  {nameModalType === 'add' ? 'Enter a name for your new relay' : 'Enter a new name for this relay'}
+                  {nameModalType === 'add' ? t('home.enterRelayName') : t('home.enterNewRelayName')}
                 </Text>
                 
                 <TextInput
                   value={nameInput}
                   onChangeText={setNameInput}
-                  placeholder="Enter relay name"
+                  placeholder={t('home.relayName')}
                   placeholderTextColor={colors.textSecondary}
                   style={{
                     backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
@@ -679,7 +681,7 @@ export default function App() {
                       fontSize: 16,
                       fontWeight: '600',
                     }}>
-                      Cancel
+                      {t('common.cancel')}
                     </Text>
                   </TouchableOpacity>
                   
@@ -699,7 +701,7 @@ export default function App() {
                       fontSize: 16,
                       fontWeight: '600',
                     }}>
-                      {nameModalType === 'add' ? 'Add' : 'Rename'}
+                      {nameModalType === 'add' ? t('common.add') : t('common.save')}
                     </Text>
                   </TouchableOpacity>
                 </View>

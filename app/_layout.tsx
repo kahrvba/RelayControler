@@ -1,4 +1,5 @@
 import { ConnectionProvider } from '@/components/ConnectionProvider';
+import { LanguageProvider } from '@/components/LanguageProvider';
 import { ProjectProvider } from '@/components/ProjectProvider';
 import { ThemeProvider as CustomThemeProvider } from '@/components/ThemeProvider';
 import '@/global.css';
@@ -24,20 +25,22 @@ function AppContent() {
   }
 
   return (
-    <CustomThemeProvider>
-      <ProjectProvider userId={user?.id} isUserLoaded={isLoaded}>
-        <ConnectionProvider userId={user?.id} isUserLoaded={isLoaded}>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </ConnectionProvider>
-      </ProjectProvider>
-    </CustomThemeProvider>
+    <LanguageProvider>
+      <CustomThemeProvider>
+        <ProjectProvider userId={user?.id} isUserLoaded={isLoaded}>
+          <ConnectionProvider userId={user?.id} isUserLoaded={isLoaded}>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            </ThemeProvider>
+          </ConnectionProvider>
+        </ProjectProvider>
+      </CustomThemeProvider>
+    </LanguageProvider>
   );
 }
 

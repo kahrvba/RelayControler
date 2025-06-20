@@ -3,6 +3,7 @@ import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
 import * as React from 'react'
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native'
+import { useLanguage } from "../../components/LanguageProvider"
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -14,6 +15,8 @@ export default function SignUpScreen() {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
+  const { t } = useLanguage()
+
   const onGoogleSignUpPress = React.useCallback(async () => {
     setError('')
     try {
@@ -70,7 +73,7 @@ export default function SignUpScreen() {
       }
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2))
-      setError(err.errors[0]?.message || 'An error occurred.')
+      setError(err.errors[0]?.message || t('auth.signUpError'))
     } finally {
       setLoading(false)
     }
@@ -84,35 +87,35 @@ export default function SignUpScreen() {
           source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
           style={styles.logo}
         />
-        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.title}>{t('auth.createAccount')}</Text>
         <Text style={styles.subtitle}>
-          Welcome! Please fill in the details to get started
+          {t('auth.welcome')}
         </Text>
 
         <TouchableOpacity
           style={[styles.socialButton, { marginBottom: 24 }]}
           onPress={onGoogleSignUpPress}>
           <FontAwesome name="google" size={24} color="black" />
-          <Text style={styles.socialButtonText}>Sign up with Google</Text>
+          <Text style={styles.socialButtonText}>{t('auth.signUpWithGoogle')}</Text>
         </TouchableOpacity>
 
         <View style={styles.separatorContainer}>
           <View style={styles.separatorLine} />
-          <Text style={styles.separatorText}>or</Text>
+          <Text style={styles.separatorText}>{t('auth.or')}</Text>
           <View style={styles.separatorLine} />
         </View>
 
         {!verifying && (
           <>
-            <Text style={styles.label}>Phone number</Text>
+            <Text style={styles.label}>{t('auth.phoneNumber')}</Text>
             <TextInput
               value={phone}
-              placeholder="+90 "
+              placeholder={t('auth.enterPhoneNumber')}
               style={styles.input}
               onChangeText={setPhone}
               keyboardType="phone-pad"
             />
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('auth.password')}</Text>
             <TextInput
               value={password}
               placeholder="••••••••"
@@ -127,7 +130,7 @@ export default function SignUpScreen() {
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.buttonText}>Continue</Text>
+                <Text style={styles.buttonText}>{t('common.next')}</Text>
               )}
             </TouchableOpacity>
           </>
@@ -135,10 +138,10 @@ export default function SignUpScreen() {
 
         {verifying && (
           <>
-            <Text style={styles.label}>Verification Code</Text>
+            <Text style={styles.label}>{t('auth.verificationCode')}</Text>
             <TextInput
               value={code}
-              placeholder="123456"
+              placeholder={t('auth.enterVerificationCode')}
               style={styles.input}
               onChangeText={setCode}
               keyboardType="numeric"
@@ -150,16 +153,16 @@ export default function SignUpScreen() {
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.buttonText}>Verify Code</Text>
+                <Text style={styles.buttonText}>{t('auth.verify')}</Text>
               )}
             </TouchableOpacity>
           </>
         )}
       </View>
       <View style={styles.footer}>
-        <Text>Already have an account?</Text>
+        <Text>{t('auth.alreadyHaveAccount')}</Text>
         <Link href="/sign-in">
-          <Text style={styles.link}>Sign in</Text>
+          <Text style={styles.link}>{t('auth.signIn')}</Text>
         </Link>
       </View>
     </View>
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'white',
     padding: 16,
   },
   card: {
