@@ -1,4 +1,5 @@
 import { ConnectionProvider } from '@/components/ConnectionProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LanguageProvider } from '@/components/LanguageProvider';
 import { ProjectProvider } from '@/components/ProjectProvider';
 import { ThemeProvider as CustomThemeProvider } from '@/components/ThemeProvider';
@@ -48,13 +49,15 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <ClerkProvider 
-      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
-      tokenCache={tokenCache}
-    >
-      <LanguageProvider>
-        <AppContent />
-      </LanguageProvider>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider
+        publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+        tokenCache={tokenCache}
+      >
+          <LanguageProvider>
+            <AppContent />
+          </LanguageProvider>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }

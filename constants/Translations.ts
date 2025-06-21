@@ -161,6 +161,17 @@ export interface Translations {
     tryAgain: string;
     somethingWentWrong: string;
   };
+
+  // Error Messages
+  error: {
+    somethingWentWrong: string;
+    tryAgainLater: string;
+    networkError: string;
+    authenticationFailed: string;
+    permissionDenied: string;
+    serverError: string;
+    unknownError: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -312,6 +323,15 @@ export const translations: Record<Language, Translations> = {
       tryAgain: 'Please try again.',
       somethingWentWrong: 'Something went wrong.',
     },
+    error: {
+      somethingWentWrong: 'Something went wrong',
+      tryAgainLater: 'Please try again later',
+      networkError: 'Network connection error',
+      authenticationFailed: 'Authentication failed',
+      permissionDenied: 'Permission denied',
+      serverError: 'Server error occurred',
+      unknownError: 'An unknown error occurred',
+    },
   },
   tr: {
     common: {
@@ -460,6 +480,15 @@ export const translations: Record<Language, Translations> = {
       networkError: 'Ağ hatası',
       tryAgain: 'Lütfen tekrar deneyin.',
       somethingWentWrong: 'Bir şeyler yanlış gitti.',
+    },
+    error: {
+      somethingWentWrong: 'Bir şeyler ters gitti',
+      tryAgainLater: 'Lütfen daha sonra tekrar deneyin',
+      networkError: 'Ağ bağlantısı hatası',
+      authenticationFailed: 'Kimlik doğrulama başarısız',
+      permissionDenied: 'İzin reddedildi',
+      serverError: 'Sunucu hatası oluştu',
+      unknownError: 'Bilinmeyen bir hata oluştu',
     },
   },
 }; 

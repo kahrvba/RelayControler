@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -379,44 +380,35 @@ export default function App() {
     }
   }, [project, refreshProject]);
 
-  const renderRelayCard = ({ item }: { item: Relay }) => (
+  const renderRelayCard = React.useCallback(({ item }: { item: Relay }) => (
     <TouchableOpacity
       onPress={() => toggleRelay(item)}
       onLongPress={() => renameRelay(item)}
       disabled={updating === item.id}
-      style={{
-        backgroundColor: 'transparent',
-        borderRadius: 24,
-        padding: 20,
-        marginBottom: 16,
-        width: (width - 72) / 2,
-        alignSelf: 'center',
-        borderWidth: 2,
-        borderColor: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.border,
-        opacity: updating === item.id ? 0.7 : 1
-      }}
+      style={[
+        styles.relayCard,
+        {
+          width: (width - 72) / 2,
+          borderColor: item.state === 1 ? '#06b6d4' : colors.border,
+          opacity: updating === item.id ? 0.7 : 1
+        }
+      ]}
     >
-      <Text style={{
-        fontSize: 18,
-        fontWeight: '700',
-        color: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.text,
-        marginBottom: 8,
-        textAlign: 'center'
-      }}>
+      <Text style={[
+        styles.relayTitle,
+        { color: item.state === 1 ? '#06b6d4' : colors.text }
+      ]}>
         {item.relay_name.toUpperCase()}
       </Text>
 
-      <Text style={{
-        fontSize: 14,
-        fontWeight: '600',
-        color: item.state === 1 ? (isDarkMode ? '#06b6d4' : '#06b6d4') : colors.textSecondary,
-        textAlign: 'center',
-        opacity: 0.85
-      }}>
+      <Text style={[
+        styles.relayStatus,
+        { color: item.state === 1 ? '#06b6d4' : colors.textSecondary }
+      ]}>
         {updating === item.id ? t('common.loading') : (item.state === 1 ? t('home.relayStateOn') : t('home.relayStateOff'))}
       </Text>
     </TouchableOpacity>
-  );
+  ), [toggleRelay, renameRelay, updating, width, colors.border, colors.text, colors.textSecondary, t]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -713,3 +705,26 @@ export default function App() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  relayCard: {
+    backgroundColor: 'transparent',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+    alignSelf: 'center',
+    borderWidth: 2,
+  },
+  relayTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  relayStatus: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    opacity: 0.85,
+  },
+});
