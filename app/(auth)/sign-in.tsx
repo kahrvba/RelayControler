@@ -5,11 +5,16 @@ import React from 'react'
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native'
 import { useLanguage } from "../../components/LanguageProvider"
@@ -96,7 +101,16 @@ export default function Page() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.card}>
         {!!error && <Text style={styles.errorText}>{error}</Text>}
         <Image
           source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
@@ -166,13 +180,16 @@ export default function Page() {
             </TouchableOpacity>
           </>
         )}
-      </View>
-      <View style={styles.footer}>
-        <Text>{t('auth.dontHaveAccount')}</Text>
-        <Link href="/sign-up">
-          <Text style={styles.link}>{t('auth.signUp')}</Text>
-        </Link>
-      </View>
+            </View>
+            <View style={styles.footer}>
+              <Text>{t('auth.dontHaveAccount')}</Text>
+              <Link href="/sign-up">
+                <Text style={styles.link}>{t('auth.signUp')}</Text>
+              </Link>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -180,9 +197,15 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
     padding: 16,
   },
   card: {

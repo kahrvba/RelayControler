@@ -2,7 +2,20 @@ import { useOAuth, useSignUp } from '@clerk/clerk-expo'
 import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
 import * as React from 'react'
-import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLanguage } from "../../components/LanguageProvider"
 import { LanguageSelector } from "../../components/LanguageSelector"
@@ -86,7 +99,16 @@ export default function SignUpScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.card}>
         {!!error && <Text style={styles.errorText}>{error}</Text>}
         <Image
           source={{ uri: 'https://innovia-iskibris.s3.eu-west-2.amazonaws.com/12431_60aca802603c6.png' }}
@@ -164,13 +186,16 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </>
         )}
-      </View>
-      <View style={styles.footer}>
-        <Text>{t('auth.alreadyHaveAccount')}</Text>
-        <Link href="/sign-in">
-          <Text style={styles.link}>{t('auth.signIn')}</Text>
-        </Link>
-      </View>
+            </View>
+            <View style={styles.footer}>
+              <Text>{t('auth.alreadyHaveAccount')}</Text>
+              <Link href="/sign-in">
+                <Text style={styles.link}>{t('auth.signIn')}</Text>
+              </Link>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -178,9 +203,15 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
     padding: 16,
   },
   card: {
