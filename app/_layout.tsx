@@ -3,7 +3,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LanguageProvider } from '@/components/LanguageProvider';
 import { ProjectProvider } from '@/components/ProjectProvider';
 import { ThemeProvider as CustomThemeProvider } from '@/components/ThemeProvider';
-import '@/global.css';
+
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ClerkProvider, useUser } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';

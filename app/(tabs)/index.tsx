@@ -1,5 +1,4 @@
 import { useProject } from '@/components/ProjectProvider';
-import "@/global.css";
 import { useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from "react";
