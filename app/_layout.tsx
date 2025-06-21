@@ -70,7 +70,10 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <ClerkProvider tokenCache={tokenCache}>
+    <ClerkProvider 
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+      tokenCache={tokenCache}
+    >
       <LanguageProvider>
         <AppContent />
       </LanguageProvider>
