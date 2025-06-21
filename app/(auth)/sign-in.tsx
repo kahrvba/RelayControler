@@ -70,7 +70,9 @@ export default function Page() {
             style={styles.logo}
           />
           <LanguageSelector />
-          <Text style={styles.title}>{t('auth.signInToAlemdar')}</Text>
+          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit={true}>
+            {t('auth.signInToAlemdar')}
+          </Text>
           <Text style={styles.subtitle}>
             {t('auth.welcomeBack')}
           </Text>
@@ -128,6 +130,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    textAlign: 'center',
+    width: '100%',
   },
   subtitle: {
     fontSize: 16,

@@ -69,7 +69,9 @@ export default function SignUpScreen() {
             style={styles.logo}
           />
           <LanguageSelector />
-          <Text style={styles.title}>{t('auth.createAccount')}</Text>
+          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit={true}>
+            {t('auth.createAccount')}
+          </Text>
           <Text style={styles.subtitle}>
             {t('auth.welcome')}
           </Text>
@@ -127,6 +129,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    textAlign: 'center',
+    width: '100%',
   },
   subtitle: {
     fontSize: 16,
