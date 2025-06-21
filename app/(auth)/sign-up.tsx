@@ -1,7 +1,6 @@
 import { useOAuth, useSignUp } from '@clerk/clerk-expo'
 import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import * as React from 'react'
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -19,7 +18,7 @@ export default function SignUpScreen() {
   const [error, setError] = React.useState('')
   const { startOAuthFlow } = useOAuth({
     strategy: 'oauth_google',
-    redirectUrl: Linking.createURL('/oauth-native-callback', { scheme: 'com.alemdarteknik' })
+    redirectUrl: 'com.alemdarteknik://oauth-native-callback'
   })
   const { t } = useLanguage()
 

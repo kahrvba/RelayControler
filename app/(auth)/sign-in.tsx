@@ -1,7 +1,6 @@
 import { useOAuth, useSignIn } from '@clerk/clerk-expo'
 import { FontAwesome } from '@expo/vector-icons'
 import { Link, useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import React from 'react'
 import {
   ActivityIndicator,
@@ -29,7 +28,7 @@ export default function Page() {
 
   const { startOAuthFlow } = useOAuth({
     strategy: 'oauth_google',
-    redirectUrl: Linking.createURL('/oauth-native-callback', { scheme: 'com.alemdarteknik' })
+    redirectUrl: 'com.alemdarteknik://oauth-native-callback'
   })
 
   const onGoogleSignInPress = React.useCallback(async () => {
